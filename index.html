@@ -10,7 +10,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <title>Workout</title>
-<link rel="stylesheet" href="css/workout.css?v=20250607a"/>
+<link rel="stylesheet" href="css/workout.css?v=20250607b"/>
 <script src="js/workout-core.js"></script>
 <script src="js/workout-library.js"></script>
 <script src="js/workout-strength-data.js"></script>
@@ -28,23 +28,31 @@
     </div>
     <form class="auth-form" id="authLoginForm" autocomplete="on">
       <label class="auth-field">
-        <span class="sr-only">Email</span>
-        <input class="auth-input" id="loginEmail" type="email" name="email" autocomplete="email" required placeholder="Email">
+        <span class="auth-label">Email</span>
+        <input class="auth-input" id="loginEmail" type="email" name="email" autocomplete="email" required placeholder="you@example.com">
       </label>
       <label class="auth-field">
-        <span class="sr-only">Password</span>
-        <input class="auth-input" id="loginPassword" type="password" name="password" autocomplete="current-password" required placeholder="Password" minlength="6">
+        <span class="auth-label">Password</span>
+        <input class="auth-input" id="loginPassword" type="password" name="password" autocomplete="current-password" required placeholder="Your password" minlength="6">
       </label>
       <button type="submit" class="auth-submit">Log in</button>
     </form>
     <form class="auth-form" id="authSignupForm" hidden autocomplete="on">
       <label class="auth-field">
-        <span class="sr-only">Email</span>
-        <input class="auth-input" id="signupEmail" type="email" name="email" autocomplete="email" required placeholder="Email">
+        <span class="auth-label">Name</span>
+        <input class="auth-input" id="signupName" type="text" name="name" autocomplete="name" required placeholder="Your name">
       </label>
       <label class="auth-field">
-        <span class="sr-only">Password</span>
-        <input class="auth-input" id="signupPassword" type="password" name="new-password" autocomplete="new-password" required placeholder="Password (6+ characters)" minlength="6">
+        <span class="auth-label">Email</span>
+        <input class="auth-input" id="signupEmail" type="email" name="email" autocomplete="email" required placeholder="you@example.com">
+      </label>
+      <label class="auth-field">
+        <span class="auth-label">Password</span>
+        <input class="auth-input" id="signupPassword" type="password" name="new-password" autocomplete="new-password" required placeholder="At least 6 characters" minlength="6">
+      </label>
+      <label class="auth-field">
+        <span class="auth-label">Confirm password</span>
+        <input class="auth-input" id="signupConfirm" type="password" name="confirm-password" autocomplete="new-password" required placeholder="Repeat password" minlength="6">
       </label>
       <button type="submit" class="auth-submit">Create account</button>
     </form>
@@ -617,7 +625,7 @@
 <script src="/api/supabase-config.js?v=20250606e"></script>
 <script src="js/workout-supabase.js?v=20250606d"></script>
 <script src="js/workout-sync.js?v=20250606d"></script>
-<script src="js/workout-auth.js?v=20250607a"></script>
+<script src="js/workout-auth.js?v=20250607b"></script>
 <script src="js/workout-app.js?v=20250603c"></script>
 </body>
 </html>

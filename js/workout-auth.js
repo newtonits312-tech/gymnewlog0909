@@ -283,15 +283,18 @@
     e.preventDefault();
     showError('');
 
+    var name = (document.getElementById('signupName')?.value || '').trim();
     var email = normalizeEmail(document.getElementById('signupEmail')?.value);
     var password = document.getElementById('signupPassword')?.value || '';
-    var name = handleFromEmail(email);
+    var confirm = document.getElementById('signupConfirm')?.value || '';
 
+    if (!name) { showError('Enter your name.'); return; }
     if (!isValidEmail(email)) { showError('Enter a valid email address.'); return; }
     if (password.length < MIN_PASSWORD_LEN) {
       showError('Password must be at least ' + MIN_PASSWORD_LEN + ' characters.');
       return;
     }
+    if (password !== confirm) { showError('Passwords do not match.'); return; }
 
     var action = useCloud()
       ? cloudSignup(name, email, password)

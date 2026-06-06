@@ -548,6 +548,7 @@ body.auth-locked{overflow:hidden;}
 .auth-tab{height:40px;border:none;border-radius:9px;background:transparent;color:var(--text2);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;}
 .auth-tab.active{background:var(--surface2);color:var(--text);box-shadow:0 1px 0 rgba(255,255,255,.04);}
 .auth-form{display:flex;flex-direction:column;gap:12px;text-align:left;}
+.auth-form[hidden]{display:none !important;}
 .auth-field{display:flex;flex-direction:column;gap:6px;}
 .auth-label{font-size:12px;font-weight:500;color:var(--text2);}
 .auth-input{width:100%;box-sizing:border-box;background:var(--surface3);border:1.5px solid var(--border2);border-radius:12px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color .15s;}
