@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<meta name="color-scheme" content="dark"/>
+<meta name="theme-color" content="#0a0a0c"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<title>Workout</title>
+<link rel="stylesheet" href="css/workout.css?v=20250603c"/>
+<script src="js/workout-core.js"></script>
+<script src="js/workout-library.js"></script>
+<script src="js/workout-strength-data.js"></script>
+<script src="js/workout-data.js"></script>
+</head>
+<body>
+<nav class="nav-top" id="navTop">
+  <div class="nav-row-main">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="brand" id="navBrand">Workout</span>
+      <span class="session-badge" id="elapsedBadge"></span>
+    </div>
+    <div class="nav-actions">
+      <div class="icon-btn" id="startStopBtn" role="button" tabindex="0" aria-label="Start workout"><span class="material-symbols-outlined" id="startStopIcon" aria-hidden="true">play_arrow</span></div>
+      <div class="icon-btn" id="dotsBtn" role="button" tabindex="0" aria-label="More options" aria-haspopup="true" aria-expanded="false"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></div>
+    </div>
+  </div>
+  <div class="nav-timer-strip">
+    <div class="nav-timer-left">
+      <div class="nav-timer-icon" aria-hidden="true"><span class="material-symbols-outlined">timer</span></div>
+      <div>
+        <div class="nav-timer-label" id="timerLabel">Rest Timer</div>
+        <div class="nav-timer-display" id="timerDisplay" role="button" tabindex="0" aria-label="Set custom rest timer duration" aria-describedby="timerLabel">--:--</div>
+        <input class="nav-timer-input" id="timerCustomInput" type="number" min="1" max="3600" placeholder="sec" inputmode="numeric">
+      </div>
+    </div>
+    <div class="nav-timer-btns">
+      <div class="nav-timer-btn ghost" id="timerPlusBtn" role="button" tabindex="0" aria-label="Add 30 seconds" style="display:none;">+30s</div>
+      <div class="nav-timer-btn play" id="timerPlayBtn" role="button" tabindex="0" aria-label="Start rest timer" aria-pressed="false"><span class="material-symbols-outlined" id="timerPlayIcon" aria-hidden="true" style="font-size:16px;">play_arrow</span></div>
+      <div class="nav-timer-btn skip" id="timerSkipBtn" role="button" tabindex="0" aria-label="Skip rest timer" style="display:none;"><span class="material-symbols-outlined" aria-hidden="true" style="font-size:16px;">restart_alt</span></div>
+    </div>
+  </div>
+  <div class="nav-progress-wrap"><div class="nav-timer-bar" id="timerBar" style="width:0%"></div></div>
+</nav>
+<main id="mainContent" class="page active">
+  <div class="workout-header">
+    <div><div class="workout-title">Chest &amp; Triceps</div><div style="font-size:12px;color:var(--text3);margin-top:2px;">Friday, Mar 20 &middot; 3 exercises</div></div>
+    <span class="progress-pill" id="exProgress">3 exercises</span>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Volume</div><div class="stat-value accent" id="totalVol">0<span style="font-size:11px;font-weight:500;color:var(--text3)"> kg</span></div></div>
+    <div class="stat-card"><div class="stat-label">Sets Done</div><div class="stat-value done-c" id="setsDone">0<span style="font-size:11px;font-weight:500;color:var(--text3)">/0</span></div></div>
+    <div class="stat-card"><div class="stat-label">Duration</div><div class="stat-value" id="durationStat">0:00</div></div>
+  </div>
+  <div class="warmup-card" id="warmupCard">
+    <div class="warmup-header">
+      <div class="warmup-title-row">
+        <div class="warmup-icon" style="background:var(--surface3);border:1px solid var(--border);color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;font-weight:500;">0</div>
+        <div><div class="warmup-label">Warm-Up</div><div class="warmup-sublabel" id="wuSubLabel">~10 min &middot; science-backed protocol</div></div>
+      </div>
+      <div class="warmup-right"><span class="warmup-prog" id="wuProg">0/7</span><span class="material-symbols-outlined" id="wuChev" style="font-size:18px;color:var(--text3);transition:transform .25s;transform:rotate(180deg);">expand_more</span></div>
+    </div>
+    <div class="warmup-body open" id="warmupBody">
+      <div class="wu-item" id="wui-0"><div class="wu-info"><div class="wu-name">Light cardio + arm swings</div><div class="wu-desc">Raise heart rate, loosen shoulders</div></div><span class="wu-rest-pill" id="wu-pill-0" style="display:none;"></span><div class="wu-time" data-wu-secs="120">2 min</div><div class="wu-check" id="wuc-0" role="checkbox" aria-checked="false" tabindex="0" aria-label="Light cardio + arm swings"><span class="material-symbols-outlined" aria-hidden="true">radio_button_unchecked</span></div></div>
+      <div class="wu-item" id="wui-1"><div class="wu-info"><div class="wu-name">T-spine foam roll</div><div class="wu-desc">Thoracic mobility for pressing arch</div></div><span class="wu-rest-pill" id="wu-pill-1" style="display:none;"></span><div class="wu-time" data-wu-secs="60">60s</div><div class="wu-check" id="wuc-1" role="checkbox" aria-checked="false" tabindex="0" aria-label="T-spine foam roll"><span class="material-symbols-outlined" aria-hidden="true">radio_button_unchecked</span></div></div>
+      <div class="wu-item" id="wui-2"><div class="wu-info"><div class="wu-name">Lat + pec foam roll</div><div class="wu-desc">Mobile lats = better bar path</div></div><span class="wu-rest-pill" id="wu-pill-2" style="display:none;"></span><div class="wu-time" data-wu-secs="60">60s</div><div class="wu-check" id="wuc-2" role="checkbox" aria-checked="false" tabindex="0" aria-label="Lat + pec foam roll"><span class="material-symbols-outlined" aria-hidden="true">radio_button_unchecked</span></div></div>
+      <div class="wu-item" id="wui-3"><div class="wu-info"><div class="wu-name">Band pull-aparts &times; 15</div><div class="wu-desc">Upper back activation, scapular control</div></div><span class="wu-rest-pill" id="wu-pill-3" style="display:none;"></span><div class="wu-time" data-wu-secs="90">2 sets</div><div class="wu-check" id="wuc-3" role="checkbox" aria-checked="false" tabindex="0" aria-label="Band pull-aparts"><span class="material-symbols-outlined" aria-hidden="true">radio_button_unchecked</span></div></div>
+      <div class="wu-item" id="wui-4"><div class="wu-info"><div class="wu-name">Push-ups &times; 10</div><div class="wu-desc">Chest, tris &amp; shoulders through full ROM</div></div><span class="wu-rest-pill" id="wu-pill-4" style="display:none;"></span><div class="wu-time" data-wu-secs="90">2 sets</div><div class="wu-check" id="wuc-4" role="checkbox" aria-checked="false" tabindex="0" aria-label="Push-ups"><span class="material-symbols-outlined" aria-hidden="true">radio_button_unchecked</span></div></div>
+      <div class="wu-item" id="wui-5"><div class="wu-info"><div class="wu-name">Empty bar bench &times; 12</div><div class="wu-desc">Dial in grip, tempo &amp; movement pattern</div></div><span class="wu-rest-pill" id="wu-pill-5" style="display:none;"></span><div class="wu-time" data-wu-secs="90">20kg</div><div class="wu-check" id="wuc-5" role="checkbox" aria-checked="false" tabindex="0" aria-label="Empty bar bench"><span class="material-symbols-outlined" aria-hidden="true">radio_button_unchecked</span></div></div>
+      <div class="wu-item" id="wui-6"><div class="wu-info"><div class="wu-name">Specific warm-up sets</div><div class="wu-desc">41kg &times; 6 &rarr; 82kg &times; 3</div></div><span class="wu-rest-pill" id="wu-pill-6" style="display:none;"></span><div class="wu-time" data-wu-secs="120">2 sets</div><div class="wu-check" id="wuc-6" role="checkbox" aria-checked="false" tabindex="0" aria-label="Specific warm-up sets"><span class="material-symbols-outlined" aria-hidden="true">radio_button_unchecked</span></div></div>
+      <div class="wu-footer"><span class="wu-skip" role="button" tabindex="0">Skip warm-up</span><div class="wu-complete-all" role="button" tabindex="0">Mark all done</div></div>
+    </div>
+  </div>
+  <div class="exercises-list" id="exercisesList"></div>
+  <div class="finish-wrap"><button type="button" class="finish-btn"><span class="material-symbols-outlined">flag</span>Finish Workout</button></div>
+</main>
+<main id="libContent" class="page lib-main">
+  <div class="lib-hero">
+    <div class="lib-large-title">Exercise Library</div>
+    <div class="lib-subtitle" id="libSubtitle">287 exercises &middot; tap to explore</div>
+  </div>
+  <div class="lib-search-row">
+    <div class="lib-search-field">
+      <span class="material-symbols-outlined s-icon">search</span>
+      <input class="lib-search" id="libSearch" type="text" placeholder="Search exercises..." autocomplete="off" spellcheck="false">
+      <div class="lib-search-x" id="libSearchX" role="button" tabindex="0" aria-label="Clear search"><span class="material-symbols-outlined">close</span></div>
+    </div>
+    <div class="lib-filter-btn" id="libFilterBtn" role="button" tabindex="0" aria-label="Filter exercises">
+      <span class="material-symbols-outlined">tune</span>
+      <div class="filter-badge" id="filterBadge">0</div>
+    </div>
+  </div>
+  <div class="lib-quick-filters-wrap"><div class="lib-quick-filters" id="libQuickFilters"></div></div>
+  <div class="lib-active-banner" id="libActiveBanner">
+    <span class="material-symbols-outlined" style="font-size:14px;color:var(--accent);flex-shrink:0;">filter_list</span>
+    <span class="lib-banner-text" id="libBannerText">Filtered</span>
+    <span class="lib-banner-clear" role="button" tabindex="0" aria-label="Clear all filters">Clear all</span>
+  </div>
+  <div class="lib-results-meta">
+    <span class="lib-results-count" id="libResultsCount">287 exercises</span>
+    <span class="lib-sort-btn"><span class="material-symbols-outlined">sort</span>A-Z</span>
+  </div>
+  <div id="libResults"></div>
+  <div class="lib-empty" id="libEmpty">
+    <div class="lib-empty-icon material-symbols-outlined">search_off</div>
+    <div class="lib-empty-title">No exercises found</div>
+    <div class="lib-empty-sub">Try different keywords or clear filters</div>
+  </div>
+  <div style="height:16px;"></div>
+</main>
+<nav class="nav-bottom" role="tablist" aria-label="Main navigation">
+  <button class="nav-item active" id="nav-log" role="tab" aria-selected="true" aria-controls="mainContent"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span class="nav-label">Log</span></button>
+  <button class="nav-item" id="nav-progress" role="tab" aria-selected="false" aria-controls="progContent"><span class="material-symbols-outlined" aria-hidden="true">bar_chart</span><span class="nav-label">Progress</span></button>
+  <button class="nav-item" id="nav-history" role="tab" aria-selected="false" aria-controls="histContent"><span class="material-symbols-outlined" aria-hidden="true">history</span><span class="nav-label">History</span></button>
+  <button class="nav-item" id="nav-library" role="tab" aria-selected="false" aria-controls="libContent"><span class="material-symbols-outlined" aria-hidden="true">menu_book</span><span class="nav-label">Library</span></button>
+  <button class="nav-item" id="nav-profile" role="tab" aria-selected="false" aria-controls="profileContent"><span class="material-symbols-outlined" aria-hidden="true">person</span><span class="nav-label">Profile</span></button>
+</nav>
+<!-- ARIA live region: toast announcements for screen readers -->
+<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+<!-- ARIA live region: timer countdown for screen readers (visually hidden, updates every 30s to avoid noise) -->
+<div id="timerAnnounce" class="sr-only" role="timer" aria-live="assertive" aria-atomic="true"></div>
+<div class="confirm-overlay" id="confirmOverlay" role="presentation">
+  <div class="confirm-sheet" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" id="confirmDialog">
+    <div class="confirm-title" id="confirmTitle">End workout?</div>
+    <div class="confirm-sub" id="confirmSub">Save your progress and finish, or keep going.</div>
+    <div class="confirm-btns">
+      <button class="confirm-btn accent"><span class="material-symbols-outlined" style="font-size:18px;">flag</span>Save &amp; Finish</button>
+      <button class="confirm-btn neutral"><span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>Keep going</button>
+      <button class="confirm-btn danger"><span class="material-symbols-outlined" style="font-size:18px;">delete</span>Discard session</button>
+    </div>
+  </div>
+</div>
+<div class="filter-sheet-overlay" id="filterSheetOverlay" role="presentation">
+  <div class="filter-sheet" role="dialog" aria-modal="true" aria-labelledby="filterSheetTitle" id="filterDialog">
+    <div class="filter-sheet-handle" aria-hidden="true"></div>
+    <div class="filter-sheet-header"><span class="filter-sheet-title" id="filterSheetTitle">Filters</span><button class="filter-sheet-reset" aria-label="Reset all filters">Reset</button></div>
+    <div class="filter-group"><div class="filter-group-label">Equipment</div><div class="filter-toggle-row" id="sheetEquip"></div></div>
+    <div class="filter-group"><div class="filter-group-label">Movement Pattern</div><div class="filter-toggle-row" id="sheetPattern"></div></div>
+    <button class="filter-sheet-apply">Show Results</button>
+  </div>
+</div>
+
+<!-- Dots overlay -->
+<div class="dots-overlay" id="dotsOverlay"></div>
+<div class="dots-menu" id="dotsMenu" role="menu">
+  <div class="dots-item" role="menuitem" tabindex="0"><span class="material-symbols-outlined">edit</span>Edit Workout</div>
+  <div class="dots-item" role="menuitem" tabindex="0"><span class="material-symbols-outlined">add_circle</span>Add Exercise</div>
+  <div class="dots-item" role="menuitem" tabindex="0"><span class="material-symbols-outlined">sticky_note_2</span>Workout Note</div>
+  <div class="dots-item" role="menuitem" tabindex="0"><span class="material-symbols-outlined">ios_share</span>Share</div>
+  <div class="dots-item" role="menuitem" tabindex="0"><span class="material-symbols-outlined">content_copy</span>Duplicate Workout</div>
+  <div class="dots-divider" role="separator"></div>
+  <div class="dots-item" role="menuitem" tabindex="0"><span class="material-symbols-outlined">settings</span>Settings</div>
+  <div class="dots-divider" role="separator"></div>
+  <div class="dots-item danger" role="menuitem" tabindex="0"><span class="material-symbols-outlined">delete</span>Discard Session</div>
+</div>
+
+<!-- History Page -->
+<main id="histContent" class="page lib-main">
+  <div class="lib-hero">
+    <div class="lib-large-title">History</div>
+    <div class="lib-subtitle">Your training log</div>
+  </div>
+  <div class="hist-pg-stats">
+    <div class="hist-pg-card"><div class="hist-pg-val">47</div><div class="hist-pg-lbl">Workouts</div></div>
+    <div class="hist-pg-card"><div class="hist-pg-val">138</div><div class="hist-pg-lbl">Hours</div></div>
+    <div class="hist-pg-card"><div class="hist-pg-val" id="histStatVol">8.4t</div><div class="hist-pg-lbl">Volume</div></div>
+  </div>
+  <div id="histList"></div>
+  <div style="height:16px;"></div>
+</main>
+
+<!-- Progress Page -->
+<main id="progContent" class="page lib-main">
+  <div class="lib-hero">
+    <div class="lib-large-title">Progress</div>
+    <div class="lib-subtitle">Strength & volume over time</div>
+  </div>
+  <div class="prog-tabs" id="progTabs" role="tablist">
+    <div class="prog-tab active" role="tab" tabindex="0" aria-selected="true">Strength</div>
+    <div class="prog-tab" role="tab" tabindex="0" aria-selected="false">Volume</div>
+    <div class="prog-tab" role="tab" tabindex="0" aria-selected="false">Records</div>
+    <div class="prog-tab" role="tab" tabindex="0" aria-selected="false">Activity</div>
+  </div>
+  <div id="progStrength">
+    <div class="prog-section">
+      <div class="prog-section-title">Estimated 1RM Trend</div>
+      <div class="prog-chart-card">
+        <div class="prog-chart-header">
+          <div><div class="prog-chart-title">Bench Press</div><div class="prog-chart-sub">Last 10 sessions</div></div>
+          <span class="prog-chart-badge up" id="gain-bench">+7.5kg</span>
+        </div>
+        <div class="prog-canvas-wrap"><canvas id="chart-bench"></canvas></div>
+      </div>
+      <div class="prog-chart-card">
+        <div class="prog-chart-header">
+          <div><div class="prog-chart-title">Incline DB Fly</div><div class="prog-chart-sub">Last 10 sessions</div></div>
+          <span class="prog-chart-badge up" id="gain-fly">+4kg</span>
+        </div>
+        <div class="prog-canvas-wrap"><canvas id="chart-fly"></canvas></div>
+      </div>
+      <div class="prog-chart-card">
+        <div class="prog-chart-header">
+          <div><div class="prog-chart-title">Tricep Pushdown</div><div class="prog-chart-sub">Last 10 sessions</div></div>
+          <span class="prog-chart-badge up" id="gain-tri">+6.5kg</span>
+        </div>
+        <div class="prog-canvas-wrap"><canvas id="chart-tri"></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div id="progVolume" style="display:none;">
+    <div class="prog-section">
+      <div class="prog-section-title" id="volSectionTitle">Weekly Volume (kg)</div>
+      <div class="prog-chart-card">
+        <div class="prog-chart-header">
+          <div><div class="prog-chart-title">Total Volume</div><div class="prog-chart-sub">Last 8 weeks</div></div>
+          <span class="prog-chart-badge up">+12%</span>
+        </div>
+        <div class="prog-canvas-wrap"><canvas id="chart-vol"></canvas></div>
+      </div>
+      <div class="prog-chart-card">
+        <div class="prog-chart-header">
+          <div><div class="prog-chart-title">Sets per Week</div><div class="prog-chart-sub">All exercises</div></div>
+          <span class="prog-chart-badge neutral">Stable</span>
+        </div>
+        <div class="prog-canvas-wrap"><canvas id="chart-sets"></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div id="progRecords" style="display:none;">
+    <div class="prog-section">
+      <div class="prog-section-title">Personal Records</div>
+      <div id="prList"></div>
+    </div>
+  </div>
+  <div id="progActivity" style="display:none;">
+    <div class="prog-section">
+      <div class="prog-streak-row">
+        <div class="prog-streak-card"><div class="prog-streak-val" style="color:var(--accent);">7</div><div class="prog-streak-label">Current Streak</div></div>
+        <div class="prog-streak-card"><div class="prog-streak-val" style="color:var(--warn);">14</div><div class="prog-streak-label">Best Streak</div></div>
+        <div class="prog-streak-card"><div class="prog-streak-val" style="color:var(--done);">47</div><div class="prog-streak-label">Total Sessions</div></div>
+      </div>
+      <div class="prog-heatmap-wrap">
+        <div class="prog-section-title" style="margin-bottom:4px;">Last 13 Weeks</div>
+        <div class="prog-heatmap" id="activityHeatmap"></div>
+      </div>
+    </div>
+  </div>
+  <div style="height:16px;"></div>
+</main>
+
+<!-- Profile / Settings Page -->
+<main id="profileContent" class="page lib-main">
+  <div class="prof-avatar-section">
+    <div class="prof-avatar">🏋️</div>
+    <div class="prof-user-info">
+      <div class="prof-name">Alex Lifter</div>
+      <div class="prof-handle">@alexlifts · Since Jan 2024</div>
+      <!-- Bodyweight + sex inline — co-located with identity per Apple HIG -->
+      <div class="prof-bio-row">
+        <span class="prof-bio-chip" id="profBwDisplay">80 kg</span>
+        <span class="prof-bio-sep">·</span>
+        <span class="prof-bio-chip prof-gender-chip" id="profGenderDisplay"><span class="prof-gender-text">Male</span><svg class="prof-gender-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10" cy="14" r="5" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M15 9l6-6M16 3h5v5"/></svg></span>
+        <span class="prof-bio-sep">·</span>
+        <span class="prof-bio-chip" id="profAgeDisplay">Age 30</span>
+      </div>
+    </div>
+    <div class="prof-edit-btn" role="button" tabindex="0" aria-label="Edit profile">
+      <span class="material-symbols-outlined">edit</span>Edit
+    </div>
+  </div>
+  <div class="prof-stats-row" style="margin-top:14px;">
+    <div class="prof-stat"><div class="prof-stat-val">47</div><div class="prof-stat-lbl">Workouts</div></div>
+    <div class="prof-stat"><div class="prof-stat-val">138h</div><div class="prof-stat-lbl">Training</div></div>
+    <div class="prof-stat"><div class="prof-stat-val">8.4t</div><div class="prof-stat-lbl">Volume</div></div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-label">Preferences</div>
+    <div class="settings-group">
+      <div class="settings-row has-inline" id="row-units">
+        <div class="settings-row-icon" style="background:rgba(200,241,53,.1);"><span class="material-symbols-outlined" style="color:var(--accent);">fitness_center</span></div>
+        <div class="settings-row-info"><div class="settings-row-label">Weight Units</div><div class="settings-row-sub">For all exercises and plates</div></div>
+        <div class="settings-row-right"><span class="settings-row-value" id="profUnitVal">kg</span><span class="material-symbols-outlined inline-chev">chevron_right</span></div>
+      </div>
+      <div class="inline-panel" id="inline-units">
+        <div class="inline-panel-body">
+          <div class="iunit-row">
+            <div class="iunit-opt selected" id="iunit-kg">
+              <span class="material-symbols-outlined">fitness_center</span>Kilograms (kg)
+            </div>
+            <div class="iunit-opt" id="iunit-lbs">
+              <span class="material-symbols-outlined">fitness_center</span>Pounds (lbs)
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-row has-inline" id="row-timer">
+        <div class="settings-row-icon" style="background:rgba(99,102,241,.1);"><span class="material-symbols-outlined" style="color:#a5b4fc;">timer</span></div>
+        <div class="settings-row-info"><div class="settings-row-label">Default Rest Timer</div><div class="settings-row-sub">Auto-starts after each set</div></div>
+        <div class="settings-row-right"><span class="settings-row-value" id="profRestVal">2:00</span><span class="material-symbols-outlined inline-chev">chevron_right</span></div>
+      </div>
+      <div class="inline-panel" id="inline-timer">
+        <div class="inline-panel-body">
+          <div class="itimer-grid">
+            <div class="itimer-chip" id="itimer-60"><div class="tpi-time">1:00</div><div class="tpi-label">Isolation</div></div>
+            <div class="itimer-chip" id="itimer-90"><div class="tpi-time">1:30</div><div class="tpi-label">Light</div></div>
+            <div class="itimer-chip selected" id="itimer-120"><div class="tpi-time">2:00</div><div class="tpi-label">Standard</div></div>
+            <div class="itimer-chip" id="itimer-150"><div class="tpi-time">2:30</div><div class="tpi-label">Moderate</div></div>
+            <div class="itimer-chip" id="itimer-180"><div class="tpi-time">3:00</div><div class="tpi-label">Heavy</div></div>
+            <div class="itimer-chip" id="itimer-300"><div class="tpi-time">5:00</div><div class="tpi-label">Max Effort</div></div>
+          </div>
+          <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px;">Auto-starts after each logged set</p>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-icon" style="background:rgba(74,222,128,.1);"><span class="material-symbols-outlined" style="color:var(--done);">vibration</span></div>
+        <div class="settings-row-info"><div class="settings-row-label">Haptic Feedback</div><div class="settings-row-sub">Vibrate on set completion</div></div>
+        <div class="settings-row-right"><div class="toggle-sw on" id="toggle-haptics"><div class="toggle-knob"></div></div></div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-icon" style="background:rgba(251,191,36,.1);"><span class="material-symbols-outlined" style="color:#fbbf24;">volume_up</span></div>
+        <div class="settings-row-info"><div class="settings-row-label">Sound Effects</div><div class="settings-row-sub">Timer complete sound</div></div>
+        <div class="settings-row-right"><div class="toggle-sw" id="toggle-sound"><div class="toggle-knob"></div></div></div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-icon" style="background:rgba(249,115,22,.1);"><span class="material-symbols-outlined" style="color:var(--warn);">brightness_high</span></div>
+        <div class="settings-row-info"><div class="settings-row-label">Keep Screen Awake</div><div class="settings-row-sub">During active workout</div></div>
+        <div class="settings-row-right"><div class="toggle-sw on" id="toggle-keepawake"><div class="toggle-knob"></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-label">Data</div>
+    <div class="settings-group">
+      <div class="settings-row has-inline" id="row-export">
+        <div class="settings-row-icon" style="background:rgba(96,165,250,.1);"><span class="material-symbols-outlined" style="color:#60a5fa;">download</span></div>
+        <div class="settings-row-info"><div class="settings-row-label">Export Data</div><div class="settings-row-sub">CSV, JSON or PDF</div></div>
+        <div class="settings-row-right"><span class="material-symbols-outlined inline-chev">chevron_right</span></div>
+      </div>
+      <div class="inline-panel" id="inline-export">
+        <div class="inline-panel-body">
+          <div class="iexport-row">
+            <div class="iexport-icon" style="background:rgba(34,197,94,.1);"><span class="material-symbols-outlined" style="color:var(--done);">table_chart</span></div>
+            <div class="iexport-info"><div class="iexport-name">CSV Spreadsheet</div><div class="iexport-desc">Open in Excel, Google Sheets</div></div>
+            <span class="material-symbols-outlined" style="color:var(--text3);font-size:16px;">download</span>
+          </div>
+          <div class="iexport-row">
+            <div class="iexport-icon" style="background:rgba(99,102,241,.1);"><span class="material-symbols-outlined" style="color:#a5b4fc;">data_object</span></div>
+            <div class="iexport-info"><div class="iexport-name">JSON</div><div class="iexport-desc">Full data backup, re-importable</div></div>
+            <span class="material-symbols-outlined" style="color:var(--text3);font-size:16px;">download</span>
+          </div>
+          <div class="iexport-row">
+            <div class="iexport-icon" style="background:rgba(251,191,36,.1);"><span class="material-symbols-outlined" style="color:#fbbf24;">description</span></div>
+            <div class="iexport-info"><div class="iexport-name">Plain Text</div><div class="iexport-desc">Human-readable workout log</div></div>
+            <span class="material-symbols-outlined" style="color:var(--text3);font-size:16px;">download</span>
+          </div>
+        </div>
+      </div>
+      <div class="settings-row has-inline" id="row-import">
+        <div class="settings-row-icon" style="background:rgba(192,132,252,.1);"><span class="material-symbols-outlined" style="color:#c084fc;">upload</span></div>
+        <div class="settings-row-info"><div class="settings-row-label">Import Data</div><div class="settings-row-sub">From other apps</div></div>
+        <div class="settings-row-right"><span class="material-symbols-outlined inline-chev">chevron_right</span></div>
+      </div>
+      <div class="inline-panel" id="inline-import">
+        <div class="inline-panel-body">
+          <div class="iimport-zone">
+            <span class="material-symbols-outlined" style="font-size:22px;color:var(--text3);display:block;margin-bottom:4px;">upload_file</span>
+            <div style="font-size:12px;font-weight:500;color:var(--text);">Tap to choose file</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">JSON or CSV from a previous export</div>
+            <input type="file" id="importFileInputInline" accept=".json,.csv" style="display:none;position:absolute;">
+          </div>
+          <div class="iimport-option">
+            <span>Import from Strong</span><span class="material-symbols-outlined" style="font-size:16px;color:var(--text3);">chevron_right</span>
+          </div>
+          <div class="iimport-option">
+            <span>Import from Hevy</span><span class="material-symbols-outlined" style="font-size:16px;color:var(--text3);">chevron_right</span>
+          </div>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-icon" style="background:rgba(34,197,94,.1);"><span class="material-symbols-outlined" style="color:var(--done);">cloud_sync</span></div>
+        <div class="settings-row-info"><div class="settings-row-label">iCloud Backup</div><div class="settings-row-sub">Last backed up today</div></div>
+        <div class="settings-row-right"><div class="toggle-sw on" id="toggle-cloud"><div class="toggle-knob"></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-label">About</div>
+    <div class="settings-group">
+      <div class="settings-row">
+        <div class="settings-row-icon" style="background:var(--surface3);"><span class="material-symbols-outlined">info</span></div>
+        <div class="settings-row-info"><div class="settings-row-label">Version</div></div>
+        <div class="settings-row-right"><span class="settings-row-value">1.0.0</span></div>
+      </div>
+      <div class="settings-row has-inline" id="row-privacy">
+        <div class="settings-row-icon" style="background:var(--surface3);"><span class="material-symbols-outlined">policy</span></div>
+        <div class="settings-row-info"><div class="settings-row-label">Privacy Policy</div></div>
+        <div class="settings-row-right"><span class="material-symbols-outlined inline-chev">chevron_right</span></div>
+      </div>
+      <div class="inline-panel" id="inline-privacy">
+        <div class="inline-panel-body">
+          <div class="privacy-block">
+            <p><strong style="color:var(--text);">Your data stays on your device.</strong> This app stores all workout data locally in your browser. We do not collect, sell, or share any personal information.</p>
+            <p>No analytics services or tracking pixels are used. No account is required.</p>
+            <p>For questions or concerns, contact <span style="color:var(--accent);"><a href="mailto:support@workoutapp.com">support@workoutapp.com</a></span> — we aim to respond within 48 hours.</p>
+            <p style="color:var(--text3);font-size:11px;">Last updated: January 2024</p>
+          </div>
+        </div>
+      </div>
+      <div class="settings-row has-inline" id="row-review">
+        <div class="settings-row-icon" style="background:var(--surface3);"><span class="material-symbols-outlined">rate_review</span></div>
+        <div class="settings-row-info"><div class="settings-row-label">Leave a Review</div></div>
+        <div class="settings-row-right"><span class="material-symbols-outlined inline-chev">chevron_right</span></div>
+      </div>
+      <div class="inline-panel" id="inline-review">
+        <div class="inline-panel-body">
+          <p style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:0;">How's your experience with the app?</p>
+          <div class="star-row" id="starRow">
+            <span class="star-btn">⭐</span>
+            <span class="star-btn">⭐</span>
+            <span class="star-btn">⭐</span>
+            <span class="star-btn">⭐</span>
+            <span class="star-btn">⭐</span>
+          </div>
+          <button class="review-submit">Submit Review</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-group">
+      <div class="settings-row danger">
+        <div class="settings-row-icon" style="background:rgba(239,68,68,.08);"><span class="material-symbols-outlined">logout</span></div>
+        <div class="settings-row-info"><div class="settings-row-label">Sign Out</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="height:16px;"></div>
+</main>
+<!-- ══ UNITS PICKER SHEET ══ -->
+<div class="picker-sheet-overlay" id="unitsSheetOverlay" role="presentation">
+  <div class="picker-sheet" role="dialog" aria-modal="true" aria-labelledby="unitsSheetTitle" id="unitsDialog">
+    <div class="picker-sheet-handle" aria-hidden="true"></div>
+    <div class="picker-sheet-header">
+      <span class="picker-sheet-title" id="unitsSheetTitle">Weight Units</span>
+      <button class="picker-sheet-close" aria-label="Close weight units picker">Done</button>
+    </div>
+    <div class="picker-options" role="radiogroup" aria-label="Weight unit selection">
+      <div class="picker-option selected" id="unit-kg" role="radio" aria-checked="true" tabindex="0">
+        <span>Kilograms (kg)</span><span class="material-symbols-outlined check-icon" aria-hidden="true">check</span>
+      </div>
+      <div class="picker-option" id="unit-lbs" role="radio" aria-checked="false" tabindex="0">
+        <span>Pounds (lbs)</span><span class="material-symbols-outlined check-icon" aria-hidden="true">check</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REST TIMER PICKER SHEET ══ -->
+<div class="picker-sheet-overlay" id="timerSheetOverlay" role="presentation">
+  <div class="picker-sheet" role="dialog" aria-modal="true" aria-labelledby="timerSheetTitle" id="timerDialog">
+    <div class="picker-sheet-handle" aria-hidden="true"></div>
+    <div class="picker-sheet-header">
+      <span class="picker-sheet-title" id="timerSheetTitle">Default Rest Timer</span>
+      <button class="picker-sheet-close" aria-label="Close rest timer picker">Done</button>
+    </div>
+    <div class="timer-presets" id="timerPresets" role="radiogroup" aria-label="Rest timer duration">
+      <div class="timer-preset-wrap" role="radio" aria-checked="false" tabindex="0"><div class="timer-preset" data-secs="60">1:00</div><div class="timer-preset-label">Isolation</div></div>
+      <div class="timer-preset-wrap" role="radio" aria-checked="false" tabindex="0"><div class="timer-preset" data-secs="90">1:30</div><div class="timer-preset-label">Light</div></div>
+      <div class="timer-preset-wrap" role="radio" aria-checked="true" tabindex="0"><div class="timer-preset selected" data-secs="120">2:00</div><div class="timer-preset-label">Standard</div></div>
+      <div class="timer-preset-wrap" role="radio" aria-checked="false" tabindex="0"><div class="timer-preset" data-secs="150">2:30</div><div class="timer-preset-label">Moderate</div></div>
+      <div class="timer-preset-wrap" role="radio" aria-checked="false" tabindex="0"><div class="timer-preset" data-secs="180">3:00</div><div class="timer-preset-label">Heavy</div></div>
+      <div class="timer-preset-wrap" role="radio" aria-checked="false" tabindex="0"><div class="timer-preset" data-secs="300">5:00</div><div class="timer-preset-label">Max Effort</div></div>
+    </div>
+    <p style="font-size:12px;color:var(--text3);text-align:center;padding:14px 20px 0;">Auto-starts after each logged set</p>
+  </div>
+</div>
+
+<!-- ══ EXPORT SHEET ══ -->
+<div class="picker-sheet-overlay" id="exportSheetOverlay" role="presentation">
+  <div class="picker-sheet" role="dialog" aria-modal="true" aria-labelledby="exportSheetTitle" id="exportDialog">
+    <div class="picker-sheet-handle" aria-hidden="true"></div>
+    <div class="picker-sheet-header">
+      <span class="picker-sheet-title" id="exportSheetTitle">Export Data</span>
+      <button class="picker-sheet-close" aria-label="Cancel export">Cancel</button>
+    </div>
+    <div class="export-formats">
+      <div class="export-row" role="button" tabindex="0" aria-label="Export as CSV spreadsheet">
+        <div class="export-row-icon" style="background:rgba(34,197,94,.1);"><span class="material-symbols-outlined" aria-hidden="true" style="color:var(--done);">table_chart</span></div>
+        <div class="export-row-info"><div class="export-row-name">CSV Spreadsheet</div><div class="export-row-desc">Open in Excel, Google Sheets</div></div>
+        <span class="material-symbols-outlined arrow" aria-hidden="true">download</span>
+      </div>
+      <div class="export-row" role="button" tabindex="0" aria-label="Export as JSON backup">
+        <div class="export-row-icon" style="background:rgba(99,102,241,.1);"><span class="material-symbols-outlined" aria-hidden="true" style="color:#a5b4fc;">data_object</span></div>
+        <div class="export-row-info"><div class="export-row-name">JSON</div><div class="export-row-desc">Full data backup, re-importable</div></div>
+        <span class="material-symbols-outlined arrow" aria-hidden="true">download</span>
+      </div>
+      <div class="export-row" role="button" tabindex="0" aria-label="Export as plain text log">
+        <div class="export-row-icon" style="background:rgba(251,191,36,.1);"><span class="material-symbols-outlined" aria-hidden="true" style="color:#fbbf24;">description</span></div>
+        <div class="export-row-info"><div class="export-row-name">Plain Text</div><div class="export-row-desc">Human-readable workout log</div></div>
+        <span class="material-symbols-outlined arrow" aria-hidden="true">download</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ IMPORT SHEET ══ -->
+<div class="picker-sheet-overlay" id="importSheetOverlay" role="presentation">
+  <div class="picker-sheet" role="dialog" aria-modal="true" aria-labelledby="importSheetTitle" id="importDialog">
+    <div class="picker-sheet-handle" aria-hidden="true"></div>
+    <div class="picker-sheet-header">
+      <span class="picker-sheet-title" id="importSheetTitle">Import Data</span>
+      <button class="picker-sheet-close" aria-label="Cancel import">Cancel</button>
+    </div>
+    <div style="position:relative;">
+      <div class="import-zone" role="button" tabindex="0" aria-label="Choose file to import">
+        <span class="material-symbols-outlined import-zone-icon" aria-hidden="true">upload_file</span>
+        <div class="import-zone-title">Tap to choose file</div>
+        <div class="import-zone-sub">JSON or CSV from a previous export</div>
+        <input type="file" id="importFileInput" accept=".json,.csv" style="display:none;position:absolute;">
+      </div>
+    </div>
+    <div style="padding:8px 12px 0;display:flex;flex-direction:column;gap:6px;">
+      <div class="picker-option" role="button" tabindex="0">
+        <span>Import from Strong</span><span class="material-symbols-outlined" aria-hidden="true" style="font-size:16px!important;color:var(--text3);">chevron_right</span>
+      </div>
+      <div class="picker-option" role="button" tabindex="0">
+        <span>Import from Hevy</span><span class="material-symbols-outlined" aria-hidden="true" style="font-size:16px!important;color:var(--text3);">chevron_right</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EDIT PROFILE SHEET ══ -->
+<div class="picker-sheet-overlay" id="editProfileSheetOverlay" role="presentation">
+  <div class="picker-sheet" role="dialog" aria-modal="true" aria-labelledby="editProfileSheetTitle" id="editProfileDialog">
+    <div class="picker-sheet-handle" aria-hidden="true"></div>
+    <div class="picker-sheet-header">
+      <span class="picker-sheet-title" id="editProfileSheetTitle">Edit Profile</span>
+      <button class="picker-sheet-close" aria-label="Cancel profile edit">Cancel</button>
+    </div>
+    <div class="edit-field"><div class="edit-field-label">Name</div><input class="edit-input" id="editName" type="text" value="Alex Lifter" placeholder="Your name"></div>
+    <div class="edit-field" style="padding-top:10px;"><div class="edit-field-label">Username</div><input class="edit-input" id="editHandle" type="text" value="alexlifts" placeholder="username"></div>
+    <div class="edit-field" style="padding-top:10px;"><div class="edit-field-label">Goal</div>
+      <select class="edit-input" id="editGoal" style="appearance:none;cursor:pointer;">
+        <option>Strength</option><option>Hypertrophy</option><option>Fat Loss</option><option>General Fitness</option>
+      </select>
+    </div>
+    <div class="edit-field" style="padding-top:10px;">
+      <div class="edit-field-label">Bodyweight</div>
+      <div class="edit-bw-wrap">
+        <input class="edit-input edit-bw-input" id="editBodyweight" type="number" step="0.5" inputmode="decimal" value="80" placeholder="e.g. 80">
+        <span class="edit-bw-unit" id="editBwUnit">kg</span>
+      </div>
+      <div class="edit-field-hint" id="editBwHint">Enter in kilograms — used to calculate your strength tier</div>
+    </div>
+    <div class="edit-field" style="padding-top:10px;">
+      <div class="edit-field-label">Age</div>
+      <input class="edit-input" id="editAge" type="number" inputmode="numeric" min="10" max="100" step="1" value="30" placeholder="e.g. 30">
+      <div style="font-size:11px;color:var(--text3);margin-top:5px;">Used for age-based Strength Level tables and tier when &ldquo;By age&rdquo; is selected</div>
+    </div>
+    <div class="edit-field" style="padding-top:10px;">
+      <div class="edit-field-label">Sex</div>
+      <div class="edit-gender-row">
+        <div id="editGenderMale" class="edit-gender-opt" role="button" tabindex="0" aria-label="Male">
+          <span class="edit-gender-caption"><span>Male</span><svg class="edit-gender-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10" cy="14" r="5" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M15 9l6-6M16 3h5v5"/></svg></span>
+        </div>
+        <div id="editGenderFemale" class="edit-gender-opt" role="button" tabindex="0" aria-label="Female">
+          <span class="edit-gender-caption"><span>Female</span><svg class="edit-gender-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 14v7M9 18h6"/></svg></span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:5px;">Used for strength standards — highlights your bodyweight bracket</div>
+    </div>
+    <div style="padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));">
+      <button type="button" id="saveProfileBtn" style="width:100%;padding:15px;border-radius:14px;background:var(--accent);color:#000;font-size:15px;font-weight:500;border:none;cursor:pointer;letter-spacing:-.2px;transition:opacity .15s;">Save Changes</button>
+    </div>
+  </div>
+</div>
+<script src="js/workout-app.js?v=20250603c"></script>
+</body>
+</html>
