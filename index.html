@@ -58,13 +58,13 @@
     </form>
     <p class="auth-storage-note" id="authStorageNote">Set up free cloud sync with Supabase (see below).</p>
     <div class="auth-setup" id="authSetup">
-      <p class="auth-setup-title">Enable free sync (phone + computer)</p>
+      <p class="auth-setup-title">Almost done — connect your Supabase project</p>
       <ol class="auth-setup-steps">
-        <li>Create a free project at <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a></li>
-        <li>Add <strong>SUPABASE_URL</strong> + <strong>SUPABASE_ANON_KEY</strong> in Vercel Environment Variables</li>
-        <li>SQL Editor → run <code>supabase/schema.sql</code></li>
-        <li>Auth → Email → turn off <strong>Confirm email</strong></li>
-        <li>Redeploy on Vercel, then sign up here</li>
+        <li>Supabase → <strong>Project Settings → API</strong> → copy <strong>Project URL</strong> + <strong>anon public</strong> key</li>
+        <li>Vercel → <strong>workout-app → Settings → Environment Variables</strong> → add <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code></li>
+        <li>Supabase → <strong>SQL Editor</strong> → run <code>supabase/schema.sql</code> (or let GitHub sync migrations)</li>
+        <li>Supabase → <strong>Auth → Providers → Email</strong> → turn off <strong>Confirm email</strong></li>
+        <li>Redeploy on Vercel, refresh, then sign up</li>
       </ol>
     </div>
     <p class="auth-gate-error" id="authError" hidden></p>
