@@ -68,7 +68,6 @@
     var gate = document.getElementById('authGate');
     if (gate) gate.classList.add('open');
     document.body.classList.add('auth-locked');
-    updateSetupPanel();
   }
 
   function hideGate() {
@@ -76,17 +75,6 @@
     if (gate) gate.classList.remove('open');
     document.body.classList.remove('auth-locked');
     showError('');
-  }
-
-  function updateSetupPanel() {
-    var setup = document.getElementById('authSetup');
-    var note = document.getElementById('authStorageNote');
-    if (setup) setup.hidden = useCloud();
-    if (note) {
-      note.innerHTML = useCloud()
-        ? 'Cloud sync enabled — same account works on phone &amp; computer (free Supabase).'
-        : 'Device-only until you add <strong>SUPABASE_URL</strong> and <strong>SUPABASE_ANON_KEY</strong> in Vercel.';
-    }
   }
 
   function setAuthMode(mode) {
@@ -104,9 +92,7 @@
     if (loginTab) loginTab.setAttribute('aria-selected', isLogin ? 'true' : 'false');
     if (signupTab) signupTab.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
     if (sub) {
-      sub.textContent = isLogin
-        ? 'Log in — your workouts sync across devices.'
-        : 'Create your free account for cloud sync.';
+      sub.textContent = isLogin ? 'Welcome back.' : 'Create your account.';
     }
     showError('');
   }
@@ -297,18 +283,15 @@
     e.preventDefault();
     showError('');
 
-    var name = (document.getElementById('signupName')?.value || '').trim();
     var email = normalizeEmail(document.getElementById('signupEmail')?.value);
     var password = document.getElementById('signupPassword')?.value || '';
-    var confirm = document.getElementById('signupConfirm')?.value || '';
+    var name = handleFromEmail(email);
 
-    if (!name) { showError('Enter your name.'); return; }
     if (!isValidEmail(email)) { showError('Enter a valid email address.'); return; }
     if (password.length < MIN_PASSWORD_LEN) {
       showError('Password must be at least ' + MIN_PASSWORD_LEN + ' characters.');
       return;
     }
-    if (password !== confirm) { showError('Passwords do not match.'); return; }
 
     var action = useCloud()
       ? cloudSignup(name, email, password)
@@ -366,7 +349,6 @@
 
     bindForms();
     setAuthMode('login');
-    updateSetupPanel();
 
     if (useCloud()) {
       loadCloudUser().then(function (user) {

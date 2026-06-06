@@ -554,14 +554,6 @@ body.auth-locked{overflow:hidden;}
 .auth-input:focus{border-color:rgba(200,241,53,.45);}
 .auth-submit{width:100%;margin-top:4px;padding:14px 16px;border:none;border-radius:14px;background:var(--accent);color:#000;font-size:15px;font-weight:500;cursor:pointer;transition:opacity .15s;}
 .auth-submit:active{opacity:.88;}
-.auth-storage-note{font-size:11px;line-height:1.45;color:var(--text3);margin:16px 0 0;}
-.auth-setup{margin-top:14px;padding:14px 16px;border-radius:14px;background:var(--surface3);border:1px solid var(--border);text-align:left;}
-.auth-setup[hidden]{display:none;}
-.auth-setup-title{font-size:13px;font-weight:500;color:var(--text);margin:0 0 10px;}
-.auth-setup-steps{margin:0;padding-left:18px;font-size:12px;line-height:1.55;color:var(--text2);}
-.auth-setup-steps li+li{margin-top:8px;}
-.auth-setup-steps a{color:var(--accent);}
-.auth-setup-steps code{font-family:'DM Mono',monospace;font-size:11px;color:var(--text);}
 .auth-gate-error{font-size:12px;color:var(--danger);margin:14px 0 0;line-height:1.4;}
 
 /* ── Profile / Settings ── */
