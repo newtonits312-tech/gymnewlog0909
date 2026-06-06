@@ -107,8 +107,13 @@
   function showGate(message) {
     var gate = document.getElementById('authGate');
     var err = document.getElementById('authError');
+    var setup = document.getElementById('authSetup');
+    var hint = document.getElementById('authHint');
     if (gate) gate.classList.add('open');
     document.body.classList.add('auth-locked');
+    var needsSetup = !getClientId();
+    if (setup) setup.hidden = !needsSetup;
+    if (hint) hint.hidden = needsSetup;
     if (err && message) {
       err.textContent = message;
       err.hidden = false;
@@ -214,10 +219,7 @@
     }
 
     showGate();
-    if (!clientId) {
-      showGate('Add your Google Client ID in js/auth-config.js to enable sign-in.');
-      return;
-    }
+    if (!clientId) return;
 
     loadGisScript()
       .then(function () {

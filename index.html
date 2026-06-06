@@ -23,7 +23,16 @@
     <h1 class="auth-gate-title" id="authTitle">Workout</h1>
     <p class="auth-gate-sub">Sign in or create an account with Google to save your profile and sync across devices.</p>
     <div class="auth-google-mount" id="googleSignInMount"></div>
-    <p class="auth-gate-hint">One tap — Google handles sign up and log in.</p>
+    <p class="auth-gate-hint" id="authHint">One tap — Google handles sign up and log in.</p>
+    <div class="auth-setup" id="authSetup" hidden>
+      <p class="auth-setup-title">Google Client ID not configured yet</p>
+      <ol class="auth-setup-steps">
+        <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Credentials</a></li>
+        <li>Create <strong>OAuth client ID</strong> → type <strong>Web application</strong></li>
+        <li>Add this site under <strong>Authorized JavaScript origins</strong> (copy your browser address bar URL origin exactly)</li>
+        <li>Paste the Client ID into <code>js/auth-config.js</code> and redeploy</li>
+      </ol>
+    </div>
     <p class="auth-gate-error" id="authError" hidden></p>
   </div>
 </div>
