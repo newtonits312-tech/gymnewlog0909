@@ -365,6 +365,7 @@ function sanitizeSetNote(raw) {
 function persistWorkoutHistory() {
   try {
     localStorage.setItem('workout_app_hist_v1', JSON.stringify(HIST_DATA));
+    if (window.WorkoutSync && window.WorkoutSync.schedulePush) window.WorkoutSync.schedulePush();
   } catch (e) {}
 }
 
@@ -374,6 +375,7 @@ function persistExerciseHistories() {
     localStorage.setItem('workout_app_exercises_v1', JSON.stringify(exercises.map(function (e) {
       return { name: e.name, history: e.history || [] };
     })));
+    if (window.WorkoutSync && window.WorkoutSync.schedulePush) window.WorkoutSync.schedulePush();
   } catch (e) {}
 }
 
@@ -1478,6 +1480,7 @@ _best1RMCache.clear();
 exercises.forEach((_, ei) => renderSets(ei));
 
 closePicker('editProfile');
+if (window.WorkoutSync && window.WorkoutSync.schedulePush) window.WorkoutSync.schedulePush();
 showToast('Profile updated');
 
 }
@@ -1488,9 +1491,6 @@ const AVATARS = ['🏋️','💪','⚡','🔥','🎯','🧗','🦾','🏃','🤸
 let avatarIdx = 0;
 
 function changeAvatar() {
-  const avatarEl = document.querySelector('.prof-avatar');
-  if (avatarEl && avatarEl.dataset.googlePhoto === '1') return;
-
   avatarIdx = (avatarIdx + 1) % AVATARS.length;
   const el = document.querySelector('.prof-avatar');
 if (el) {

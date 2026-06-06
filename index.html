@@ -10,7 +10,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <title>Workout</title>
-<link rel="stylesheet" href="css/workout.css?v=20250603c"/>
+<link rel="stylesheet" href="css/workout.css?v=20250606d"/>
 <script src="js/workout-core.js"></script>
 <script src="js/workout-library.js"></script>
 <script src="js/workout-strength-data.js"></script>
@@ -21,16 +21,50 @@
   <div class="auth-gate-card">
     <div class="auth-gate-logo" aria-hidden="true">🏋️</div>
     <h1 class="auth-gate-title" id="authTitle">Workout</h1>
-    <p class="auth-gate-sub">Sign in or create an account with Google to save your profile and sync across devices.</p>
-    <div class="auth-google-mount" id="googleSignInMount"></div>
-    <p class="auth-gate-hint" id="authHint">One tap — Google handles sign up and log in.</p>
-    <div class="auth-setup" id="authSetup" hidden>
-      <p class="auth-setup-title">Google Client ID not configured yet</p>
+    <p class="auth-gate-sub" id="authGateSub">Log in with the email and password you signed up with.</p>
+    <div class="auth-tabs" role="tablist" aria-label="Account">
+      <button type="button" class="auth-tab active" id="authTabLogin" role="tab" aria-selected="true">Log in</button>
+      <button type="button" class="auth-tab" id="authTabSignup" role="tab" aria-selected="false">Sign up</button>
+    </div>
+    <form class="auth-form" id="authLoginForm" autocomplete="on">
+      <label class="auth-field">
+        <span class="auth-label">Email</span>
+        <input class="auth-input" id="loginEmail" type="email" name="email" autocomplete="email" required placeholder="you@example.com">
+      </label>
+      <label class="auth-field">
+        <span class="auth-label">Password</span>
+        <input class="auth-input" id="loginPassword" type="password" name="password" autocomplete="current-password" required placeholder="Your password" minlength="6">
+      </label>
+      <button type="submit" class="auth-submit">Log in</button>
+    </form>
+    <form class="auth-form" id="authSignupForm" hidden autocomplete="on">
+      <label class="auth-field">
+        <span class="auth-label">Name</span>
+        <input class="auth-input" id="signupName" type="text" name="name" autocomplete="name" required placeholder="Your name">
+      </label>
+      <label class="auth-field">
+        <span class="auth-label">Email</span>
+        <input class="auth-input" id="signupEmail" type="email" name="email" autocomplete="email" required placeholder="you@example.com">
+      </label>
+      <label class="auth-field">
+        <span class="auth-label">Password</span>
+        <input class="auth-input" id="signupPassword" type="password" name="new-password" autocomplete="new-password" required placeholder="At least 6 characters" minlength="6">
+      </label>
+      <label class="auth-field">
+        <span class="auth-label">Confirm password</span>
+        <input class="auth-input" id="signupConfirm" type="password" name="confirm-password" autocomplete="new-password" required placeholder="Repeat password" minlength="6">
+      </label>
+      <button type="submit" class="auth-submit">Create account</button>
+    </form>
+    <p class="auth-storage-note" id="authStorageNote">Set up free cloud sync with Supabase (see below).</p>
+    <div class="auth-setup" id="authSetup">
+      <p class="auth-setup-title">Enable free sync (phone + computer)</p>
       <ol class="auth-setup-steps">
-        <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Credentials</a></li>
-        <li>Create <strong>OAuth client ID</strong> → type <strong>Web application</strong></li>
-        <li>Add this site under <strong>Authorized JavaScript origins</strong> (copy your browser address bar URL origin exactly)</li>
-        <li>Paste the Client ID into <code>js/auth-config.js</code> and redeploy</li>
+        <li>Create a free project at <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a></li>
+        <li>Add <strong>SUPABASE_URL</strong> + <strong>SUPABASE_ANON_KEY</strong> in Vercel Environment Variables</li>
+        <li>SQL Editor → run <code>supabase/schema.sql</code></li>
+        <li>Auth → Email → turn off <strong>Confirm email</strong></li>
+        <li>Redeploy on Vercel, then sign up here</li>
       </ol>
     </div>
     <p class="auth-gate-error" id="authError" hidden></p>
@@ -422,7 +456,7 @@
         <div class="inline-panel-body">
           <div class="privacy-block">
             <p><strong style="color:var(--text);">Your data stays on your device.</strong> This app stores all workout data locally in your browser. We do not collect, sell, or share any personal information.</p>
-            <p>Sign-in uses Google only for authentication. Workout data stays in your browser unless you export it.</p>
+            <p>With Supabase enabled, your account and workouts sync via a free cloud database. Vercel only hosts the app files. Without Supabase, data stays in this browser only.</p>
             <p>For questions or concerns, contact <span style="color:var(--accent);"><a href="mailto:support@workoutapp.com">support@workoutapp.com</a></span> — we aim to respond within 48 hours.</p>
             <p style="color:var(--text3);font-size:11px;">Last updated: January 2024</p>
           </div>
@@ -450,9 +484,9 @@
   </div>
   <div class="settings-section">
     <div class="settings-group">
-      <div class="settings-row danger" id="signOutBtn" role="button" tabindex="0" aria-label="Sign out of Google account">
+      <div class="settings-row danger" id="signOutBtn" role="button" tabindex="0" aria-label="Sign out">
         <div class="settings-row-icon" style="background:rgba(239,68,68,.08);"><span class="material-symbols-outlined">logout</span></div>
-        <div class="settings-row-info"><div class="settings-row-label">Sign Out</div><div class="settings-row-sub">Google account</div></div>
+        <div class="settings-row-info"><div class="settings-row-label">Sign Out</div><div class="settings-row-sub">Your account on this device</div></div>
       </div>
     </div>
   </div>
@@ -597,8 +631,12 @@
     </div>
   </div>
 </div>
-<script src="js/auth-config.js?v=20250606a"></script>
-<script src="js/workout-auth.js?v=20250606a"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js?v=20250606c"></script>
+<script src="/api/supabase-config.js?v=20250606e"></script>
+<script src="js/workout-supabase.js?v=20250606d"></script>
+<script src="js/workout-sync.js?v=20250606d"></script>
+<script src="js/workout-auth.js?v=20250606d"></script>
 <script src="js/workout-app.js?v=20250603c"></script>
 </body>
 </html>
