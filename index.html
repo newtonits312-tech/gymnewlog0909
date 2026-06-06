@@ -17,6 +17,16 @@
 <script src="js/workout-data.js"></script>
 </head>
 <body>
+<div class="auth-gate" id="authGate" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="auth-gate-card">
+    <div class="auth-gate-logo" aria-hidden="true">🏋️</div>
+    <h1 class="auth-gate-title" id="authTitle">Workout</h1>
+    <p class="auth-gate-sub">Sign in or create an account with Google to save your profile and sync across devices.</p>
+    <div class="auth-google-mount" id="googleSignInMount"></div>
+    <p class="auth-gate-hint">One tap — Google handles sign up and log in.</p>
+    <p class="auth-gate-error" id="authError" hidden></p>
+  </div>
+</div>
 <nav class="nav-top" id="navTop">
   <div class="nav-row-main">
     <div style="display:flex;align-items:center;gap:10px;">
@@ -254,10 +264,10 @@
 <!-- Profile / Settings Page -->
 <main id="profileContent" class="page lib-main">
   <div class="prof-avatar-section">
-    <div class="prof-avatar">🏋️</div>
+    <div class="prof-avatar" id="profAvatar">🏋️</div>
     <div class="prof-user-info">
-      <div class="prof-name">Alex Lifter</div>
-      <div class="prof-handle">@alexlifts · Since Jan 2024</div>
+      <div class="prof-name" id="profName">Alex Lifter</div>
+      <div class="prof-handle" id="profHandle">@alexlifts · Since Jan 2024</div>
       <!-- Bodyweight + sex inline — co-located with identity per Apple HIG -->
       <div class="prof-bio-row">
         <span class="prof-bio-chip" id="profBwDisplay">80 kg</span>
@@ -403,7 +413,7 @@
         <div class="inline-panel-body">
           <div class="privacy-block">
             <p><strong style="color:var(--text);">Your data stays on your device.</strong> This app stores all workout data locally in your browser. We do not collect, sell, or share any personal information.</p>
-            <p>No analytics services or tracking pixels are used. No account is required.</p>
+            <p>Sign-in uses Google only for authentication. Workout data stays in your browser unless you export it.</p>
             <p>For questions or concerns, contact <span style="color:var(--accent);"><a href="mailto:support@workoutapp.com">support@workoutapp.com</a></span> — we aim to respond within 48 hours.</p>
             <p style="color:var(--text3);font-size:11px;">Last updated: January 2024</p>
           </div>
@@ -431,9 +441,9 @@
   </div>
   <div class="settings-section">
     <div class="settings-group">
-      <div class="settings-row danger">
+      <div class="settings-row danger" id="signOutBtn" role="button" tabindex="0" aria-label="Sign out of Google account">
         <div class="settings-row-icon" style="background:rgba(239,68,68,.08);"><span class="material-symbols-outlined">logout</span></div>
-        <div class="settings-row-info"><div class="settings-row-label">Sign Out</div></div>
+        <div class="settings-row-info"><div class="settings-row-label">Sign Out</div><div class="settings-row-sub">Google account</div></div>
       </div>
     </div>
   </div>
@@ -578,6 +588,8 @@
     </div>
   </div>
 </div>
+<script src="js/auth-config.js?v=20250606a"></script>
+<script src="js/workout-auth.js?v=20250606a"></script>
 <script src="js/workout-app.js?v=20250603c"></script>
 </body>
 </html>

@@ -260,7 +260,23 @@ function initDomBindings() {
     submitReview();
   });
 
-  document.querySelector('#profileContent .settings-row.danger')?.addEventListener('click', function () { showToast('Signed out'); });
+  const signOutBtn = document.getElementById('signOutBtn');
+  if (signOutBtn) {
+    const doSignOut = function () {
+      if (window.WorkoutAuth && typeof window.WorkoutAuth.signOut === 'function') {
+        window.WorkoutAuth.signOut();
+      } else {
+        showToast('Signed out');
+      }
+    };
+    signOutBtn.addEventListener('click', doSignOut);
+    signOutBtn.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        doSignOut();
+      }
+    });
+  }
 
   [['units', 'unitsSheetOverlay'], ['timer', 'timerSheetOverlay'], ['export', 'exportSheetOverlay'], ['import', 'importSheetOverlay'], ['editProfile', 'editProfileSheetOverlay']].forEach(function (pair) {
     const overlay = document.getElementById(pair[1]);
@@ -1472,6 +1488,8 @@ const AVATARS = ['🏋️','💪','⚡','🔥','🎯','🧗','🦾','🏃','🤸
 let avatarIdx = 0;
 
 function changeAvatar() {
+  const avatarEl = document.querySelector('.prof-avatar');
+  if (avatarEl && avatarEl.dataset.googlePhoto === '1') return;
 
   avatarIdx = (avatarIdx + 1) % AVATARS.length;
   const el = document.querySelector('.prof-avatar');
