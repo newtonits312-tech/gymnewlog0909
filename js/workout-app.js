@@ -1384,6 +1384,7 @@ if (dialog) {
 
 // Sync bodyweight display unit when opening profile editor
 if (id === 'editProfile') {
+  if (dialog) dialog.scrollTop = 0;
   var bwEl = document.getElementById('editBodyweight');
   var bwUnit = document.getElementById('editBwUnit');
   if (bwEl) {
