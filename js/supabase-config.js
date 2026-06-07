@@ -15,6 +15,6 @@
  * but do not put service-role keys here.
  */
 window.SUPABASE_CONFIG = {
-  url: '',
-  anonKey: ''
+  url: 'https://uixmgaebkebiwtfjexgm.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpeG1nYWVia2ViaXd0ZmpleGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTMyMDEsImV4cCI6MjA5NjMyOTIwMX0.xb5XeRBqoxyosrmLCscmz7mXEf4gdkzYMNjVfGta0pw'
 };

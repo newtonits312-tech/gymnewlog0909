@@ -10,7 +10,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <title>Workout</title>
-<link rel="stylesheet" href="css/workout.css?v=20250607b"/>
+<link rel="stylesheet" href="css/workout.css?v=20250608a"/>
 <script src="js/workout-core.js"></script>
 <script src="js/workout-library.js"></script>
 <script src="js/workout-strength-data.js"></script>
@@ -28,8 +28,8 @@
     </div>
     <form class="auth-form" id="authLoginForm" autocomplete="on">
       <label class="auth-field">
-        <span class="auth-label">Email</span>
-        <input class="auth-input" id="loginEmail" type="email" name="email" autocomplete="email" required placeholder="you@example.com">
+        <span class="auth-label">Email or username</span>
+        <input class="auth-input" id="loginEmail" type="text" name="email" autocomplete="username" inputmode="email" required placeholder="you@example.com or admin">
       </label>
       <label class="auth-field">
         <span class="auth-label">Password</span>
@@ -48,11 +48,16 @@
       </label>
       <label class="auth-field">
         <span class="auth-label">Password</span>
-        <input class="auth-input" id="signupPassword" type="password" name="new-password" autocomplete="new-password" required placeholder="At least 6 characters" minlength="6">
+        <input class="auth-input" id="signupPassword" type="password" name="new-password" autocomplete="new-password" required placeholder="At least 8 characters" minlength="8">
+        <div class="auth-password-meter" id="signupPasswordMeter" hidden>
+          <div class="auth-meter-track"><div class="auth-meter-fill" id="signupMeterFill"></div></div>
+          <span class="auth-meter-label" id="signupMeterLabel"></span>
+        </div>
       </label>
       <label class="auth-field">
         <span class="auth-label">Confirm password</span>
-        <input class="auth-input" id="signupConfirm" type="password" name="confirm-password" autocomplete="new-password" required placeholder="Repeat password" minlength="6">
+        <input class="auth-input" id="signupConfirm" type="password" name="confirm-password" autocomplete="new-password" required placeholder="Repeat password" minlength="8">
+        <p class="auth-match-hint" id="signupMatchHint" aria-live="polite"></p>
       </label>
       <button type="submit" class="auth-submit">Create account</button>
     </form>
@@ -313,7 +318,7 @@
       <span class="material-symbols-outlined">edit</span>Edit
     </div>
   </div>
-  <div class="prof-stats-row" style="margin-top:14px;">
+  <div class="prof-stats-row">
     <div class="prof-stat"><div class="prof-stat-val">47</div><div class="prof-stat-lbl">Workouts</div></div>
     <div class="prof-stat"><div class="prof-stat-val">138h</div><div class="prof-stat-lbl">Training</div></div>
     <div class="prof-stat"><div class="prof-stat-val">8.4t</div><div class="prof-stat-lbl">Volume</div></div>
@@ -421,10 +426,10 @@
           </div>
         </div>
       </div>
-      <div class="settings-row">
+      <div class="settings-row" id="row-cloud-sync" role="button" tabindex="0" aria-label="Cloud sync status">
         <div class="settings-row-icon" style="background:rgba(34,197,94,.1);"><span class="material-symbols-outlined" style="color:var(--done);">cloud_sync</span></div>
-        <div class="settings-row-info"><div class="settings-row-label">iCloud Backup</div><div class="settings-row-sub">Last backed up today</div></div>
-        <div class="settings-row-right"><div class="toggle-sw on" id="toggle-cloud"><div class="toggle-knob"></div></div></div>
+        <div class="settings-row-info"><div class="settings-row-label">Cloud Sync</div><div class="settings-row-sub" id="cloudSyncSub">Checking…</div></div>
+        <div class="settings-row-right"><span class="settings-row-value" id="cloudSyncBadge" style="font-size:11px;">—</span></div>
       </div>
     </div>
   </div>
@@ -621,11 +626,11 @@
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-config.js?v=20250606c"></script>
-<script src="/api/supabase-config.js?v=20250606e"></script>
-<script src="js/workout-supabase.js?v=20250606d"></script>
-<script src="js/workout-sync.js?v=20250606d"></script>
-<script src="js/workout-auth.js?v=20250607b"></script>
-<script src="js/workout-app.js?v=20250603c"></script>
+<script src="js/supabase-config.js?v=20250607c"></script>
+<script src="/api/supabase-config.js?v=20250607c"></script>
+<script src="js/workout-supabase.js?v=20250607c"></script>
+<script src="js/workout-sync.js?v=20250607c"></script>
+<script src="js/workout-auth.js?v=20250607c"></script>
+<script src="js/workout-app.js?v=20250607c"></script>
 </body>
 </html>

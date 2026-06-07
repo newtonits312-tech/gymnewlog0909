@@ -226,7 +226,7 @@ function initDomBindings() {
     on('itimer-' + secs, 'click', function (e) { e.stopPropagation(); selectRestTimer(secs); });
   });
 
-  [['toggle-haptics', 'haptics'], ['toggle-sound', 'sound'], ['toggle-keepawake', 'keepawake'], ['toggle-cloud', 'cloud']].forEach(function (pair) {
+  [['toggle-haptics', 'haptics'], ['toggle-sound', 'sound'], ['toggle-keepawake', 'keepawake']].forEach(function (pair) {
     const t = document.getElementById(pair[0]);
     const row = t && t.closest('.settings-row');
     if (row) row.addEventListener('click', function () { toggleSetting(pair[1]); });
@@ -364,7 +364,8 @@ function sanitizeSetNote(raw) {
 
 function persistWorkoutHistory() {
   try {
-    localStorage.setItem('workout_app_hist_v1', JSON.stringify(HIST_DATA));
+    var key = window.WorkoutSync && window.WorkoutSync.getHistKey ? window.WorkoutSync.getHistKey() : 'workout_app_hist_v1';
+    localStorage.setItem(key, JSON.stringify(HIST_DATA));
     if (window.WorkoutSync && window.WorkoutSync.schedulePush) window.WorkoutSync.schedulePush();
   } catch (e) {}
 }
@@ -372,7 +373,8 @@ function persistWorkoutHistory() {
 function persistExerciseHistories() {
   try {
     if (typeof exercises === 'undefined' || !exercises) return;
-    localStorage.setItem('workout_app_exercises_v1', JSON.stringify(exercises.map(function (e) {
+    var key = window.WorkoutSync && window.WorkoutSync.getExKey ? window.WorkoutSync.getExKey() : 'workout_app_exercises_v1';
+    localStorage.setItem(key, JSON.stringify(exercises.map(function (e) {
       return { name: e.name, history: e.history || [] };
     })));
     if (window.WorkoutSync && window.WorkoutSync.schedulePush) window.WorkoutSync.schedulePush();
@@ -380,6 +382,10 @@ function persistExerciseHistories() {
 }
 
 function loadSavedWorkoutData() {
+  if (window.WorkoutSync && window.WorkoutSync.loadLocalState) {
+    window.WorkoutSync.loadLocalState();
+    return;
+  }
   try {
     var h = localStorage.getItem('workout_app_hist_v1');
     if (h) {
@@ -397,6 +403,26 @@ function loadSavedWorkoutData() {
       }
     }
   } catch (err) {}
+}
+
+function updateProfileStats() {
+  var rows = document.querySelectorAll('.prof-stat-val');
+  if (!rows.length || typeof HIST_DATA === 'undefined') return;
+  var count = HIST_DATA.length;
+  var totalMin = 0;
+  var totalVol = 0;
+  HIST_DATA.forEach(function (s) {
+    if (s.dur) {
+      var m = parseInt(String(s.dur).replace(/\D/g, ''), 10);
+      if (!isNaN(m)) totalMin += m;
+    }
+    if (typeof s.vol === 'number') totalVol += s.vol;
+  });
+  var hours = Math.round(totalMin / 60);
+  var volT = totalVol >= 1000 ? (totalVol / 1000).toFixed(1) + 't' : totalVol + 'kg';
+  if (rows[0]) rows[0].textContent = String(count);
+  if (rows[1]) rows[1].textContent = hours + 'h';
+  if (rows[2]) rows[2].textContent = volT;
 }
 
 // ── A11Y: Focus trap for dialogs ──
@@ -3973,13 +3999,18 @@ document.addEventListener('visibilitychange', function() {
   }
 });
 initDomBindings();
-loadSavedWorkoutData();
+if (window.WorkoutSync && window.WorkoutSync.resetToFreshAccount) {
+  window.WorkoutSync.resetToFreshAccount();
+} else {
+  loadSavedWorkoutData();
+}
 var restoredPage=getSavedPage();
 if (restoredPage&&restoredPage!=='log')switchPage(restoredPage);
 renderAll();
 initLibrary();
 initHistory();
 updateProfileDisplay();
+updateProfileStats();
 window.addEventListener('hashchange',function(){
   var p=getSavedPage()||'log';
   if (p!==currentPage)switchPage(p);
