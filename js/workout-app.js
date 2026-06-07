@@ -226,7 +226,7 @@ function initDomBindings() {
     on('itimer-' + secs, 'click', function (e) { e.stopPropagation(); selectRestTimer(secs); });
   });
 
-  [['toggle-haptics', 'haptics'], ['toggle-sound', 'sound'], ['toggle-keepawake', 'keepawake']].forEach(function (pair) {
+  [['toggle-haptics', 'haptics'], ['toggle-sound', 'sound'], ['toggle-keepawake', 'keepawake'], ['toggle-cloudsync', 'cloudsync']].forEach(function (pair) {
     const t = document.getElementById(pair[0]);
     const row = t && t.closest('.settings-row');
     if (row) row.addEventListener('click', function () { toggleSetting(pair[1]); });
@@ -405,24 +405,161 @@ function loadSavedWorkoutData() {
   } catch (err) {}
 }
 
-function updateProfileStats() {
-  var rows = document.querySelectorAll('.prof-stat-val');
-  if (!rows.length || typeof HIST_DATA === 'undefined') return;
-  var count = HIST_DATA.length;
+function hasWorkoutHistory() {
+  return typeof HIST_DATA !== 'undefined' && Array.isArray(HIST_DATA) && HIST_DATA.length > 0;
+}
+
+function parseSessionDate(s) {
+  if (!s || !s.date) return null;
+  var d = new Date(s.date);
+  if (!isNaN(d.getTime())) return d;
+  var m = String(s.date).match(/(\w+)\s+(\d{1,2}),?\s*(\d{4})/);
+  if (m) {
+    d = new Date(m[1] + ' ' + m[2] + ', ' + m[3]);
+    if (!isNaN(d.getTime())) return d;
+  }
+  return null;
+}
+
+function computeHistTotals() {
+  var count = hasWorkoutHistory() ? HIST_DATA.length : 0;
   var totalMin = 0;
   var totalVol = 0;
-  HIST_DATA.forEach(function (s) {
-    if (s.dur) {
-      var m = parseInt(String(s.dur).replace(/\D/g, ''), 10);
-      if (!isNaN(m)) totalMin += m;
-    }
-    if (typeof s.vol === 'number') totalVol += s.vol;
-  });
+  if (count) {
+    HIST_DATA.forEach(function (s) {
+      if (s.dur) {
+        var mins = parseInt(String(s.dur).replace(/\D/g, ''), 10);
+        if (!isNaN(mins)) totalMin += mins;
+      }
+      if (typeof s.vol === 'number') totalVol += s.vol;
+    });
+  }
   var hours = Math.round(totalMin / 60);
-  var volT = totalVol >= 1000 ? (totalVol / 1000).toFixed(1) + 't' : totalVol + 'kg';
-  if (rows[0]) rows[0].textContent = String(count);
-  if (rows[1]) rows[1].textContent = hours + 'h';
-  if (rows[2]) rows[2].textContent = volT;
+  var volLabel = '0';
+  if (count && totalVol > 0) {
+    volLabel = totalVol >= 1000 ? (totalVol / 1000).toFixed(1) + 't' : Math.round(totalVol) + 'kg';
+  }
+  return { count: count, hours: hours, totalVol: totalVol, volLabel: volLabel };
+}
+
+function computeStreaks() {
+  if (!hasWorkoutHistory()) return { current: 0, best: 0 };
+  var days = [];
+  HIST_DATA.forEach(function (s) {
+    var d = parseSessionDate(s);
+    if (!d) return;
+    var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    if (days.indexOf(key) === -1) days.push(key);
+  });
+  days.sort();
+  if (!days.length) return { current: 0, best: 0 };
+  var best = 1;
+  var run = 1;
+  for (var i = 1; i < days.length; i++) {
+    var prev = new Date(days[i - 1]);
+    var cur = new Date(days[i]);
+    var diff = Math.round((cur - prev) / 86400000);
+    if (diff === 1) {
+      run++;
+      if (run > best) best = run;
+    } else if (diff > 1) {
+      run = 1;
+    }
+  }
+  var today = new Date();
+  var todayKey = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  var current = 0;
+  if (days.indexOf(todayKey) !== -1 || days.indexOf(days[days.length - 1]) !== -1) {
+    current = 1;
+    for (var j = days.length - 2; j >= 0; j--) {
+      var a = new Date(days[j]);
+      var b = new Date(days[j + 1]);
+      if (Math.round((b - a) / 86400000) === 1) current++;
+      else break;
+    }
+    var lastKey = days[days.length - 1];
+    var lastDate = new Date(lastKey);
+    var gapFromToday = Math.round((today - lastDate) / 86400000);
+    if (gapFromToday > 1) current = 0;
+  }
+  return { current: current, best: Math.max(best, current) };
+}
+
+function setStatText(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function updateProfileStats() {
+  var t = computeHistTotals();
+  var streaks = computeStreaks();
+  setStatText('profStatWorkouts', String(t.count));
+  setStatText('profStatHours', t.count ? t.hours + 'h' : '0h');
+  setStatText('profStatVolume', t.volLabel);
+  setStatText('histStatCount', String(t.count));
+  setStatText('histStatHours', String(t.hours));
+  setStatText('histStatVol', t.volLabel);
+  setStatText('progStreakCurrent', String(streaks.current));
+  setStatText('progStreakBest', String(streaks.best));
+  setStatText('progStreakTotal', String(t.count));
+}
+
+function estimate1RMkg(w, r) {
+  var weight = parseFloat(w);
+  var reps = parseFloat(r);
+  if (!weight || weight <= 0 || !reps || reps <= 0) return 0;
+  return weight * (1 + reps / 30);
+}
+
+function destroyProgressCharts() {
+  if (typeof Chart === 'undefined') return;
+  document.querySelectorAll('.prog-canvas-wrap canvas').forEach(function (el) {
+    var inst = Chart.getChart(el);
+    if (inst) inst.destroy();
+    el.closest('.prog-canvas-wrap')?.classList.remove('loaded');
+  });
+  chartsStrengthInit = false;
+  chartsVolumeInit = false;
+}
+
+function showProgressEmpty(show) {
+  var empty = document.getElementById('progNoData');
+  var tabs = document.getElementById('progTabs');
+  if (empty) empty.hidden = !show;
+  if (tabs) tabs.style.display = show ? 'none' : '';
+  ['progStrength', 'progVolume', 'progRecords', 'progActivity'].forEach(function (id) {
+    var sec = document.getElementById(id);
+    if (sec) sec.style.display = show ? 'none' : '';
+  });
+  if (!show) {
+    var active = document.querySelector('.prog-tab.active');
+    var tabName = 'strength';
+    if (active) {
+      var labels = ['strength', 'volume', 'records', 'activity'];
+      var idx = Array.prototype.indexOf.call(document.querySelectorAll('.prog-tab'), active);
+      if (idx >= 0) tabName = labels[idx];
+    }
+    switchProgTab(tabName, document.querySelector('.prog-tab.active'));
+  }
+}
+
+function refreshProgressPage() {
+  updateProfileStats();
+  if (!hasWorkoutHistory()) {
+    destroyProgressCharts();
+    showProgressEmpty(true);
+    return;
+  }
+  showProgressEmpty(false);
+  destroyProgressCharts();
+  var active = document.querySelector('.prog-tab.active');
+  var tabName = 'strength';
+  if (active) {
+    var labels = ['strength', 'volume', 'records', 'activity'];
+    var idx = Array.prototype.indexOf.call(document.querySelectorAll('.prog-tab'), active);
+    if (idx >= 0) tabName = labels[idx];
+  }
+  switchProgTab(tabName, active);
 }
 
 // ── A11Y: Focus trap for dialogs ──
@@ -584,9 +721,34 @@ function dotsAction(act) {
 }
 
 // ── HISTORY PAGE (sessions: window.HIST_DATA in js/workout-data.js) ──
+function deleteHistorySession(id, ev) {
+  if (ev) {
+    ev.stopPropagation();
+    ev.preventDefault();
+  }
+  if (!hasWorkoutHistory()) return;
+  var session = HIST_DATA.find(function (s) { return s.id === id; });
+  if (!session) return;
+  if (!confirm('Delete this workout from your history? This cannot be undone.')) return;
+  var idx = HIST_DATA.findIndex(function (s) { return s.id === id; });
+  if (idx === -1) return;
+  HIST_DATA.splice(idx, 1);
+  persistWorkoutHistory();
+  refreshHistory();
+  refreshProgressPage();
+  if (window.WorkoutSync && window.WorkoutSync.push) window.WorkoutSync.push();
+  showToast('Workout deleted');
+}
+
 function initHistory() {
   // ── DSA: Map grouping (insertion-order) + DocumentFragment — O(n) one-pass ──
   const container=document.getElementById('histList');
+  if (!container) return;
+  if (!hasWorkoutHistory()) {
+    container.innerHTML = '<div class="hist-empty"><span class="material-symbols-outlined hist-empty-icon" aria-hidden="true">history</span><div class="hist-empty-title">No workouts yet</div><div class="hist-empty-sub">Finish a session or import data to build your log.</div></div>';
+    updateProfileStats();
+    return;
+  }
   const months=new Map();
   HIST_DATA.forEach(s=>{
     const yMatch = String(s.date || '').match(/\d{4}/);
@@ -615,7 +777,9 @@ function initHistory() {
       row.onkeydown=(e)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleHistSession(s.id);}}
       row.innerHTML='<div class="hist-session-icon" style="background:rgba(200,241,53,.08);">' + s.emoji + '</div>\
         <div class="hist-session-info"><div class="hist-session-name">' + escapeHtml(s.name) + '</div><div class="hist-session-meta">' + escapeHtml(s.day) + ' · ' + escapeHtml(s.date) + ' · ' + s.exercises.length + ' exercises</div></div>\
-        <div class="hist-session-right"><div class="hist-session-vol">' + (profUnit==='lbs'?Math.round(s.vol*2.20462).toLocaleString()+' lbs':(s.vol/1000).toFixed(1)+'t') + '</div><div class="hist-session-meta-row"><div class="hist-session-dur">' + escapeHtml(s.dur) + '</div>' + (s.hasPR?'<span class="hist-tag pr">PR</span>':'') + '</div></div>';
+        <div class="hist-session-right"><div class="hist-session-vol">' + (profUnit==='lbs'?Math.round(s.vol*2.20462).toLocaleString()+' lbs':(s.vol/1000).toFixed(1)+'t') + '</div><div class="hist-session-meta-row"><div class="hist-session-dur">' + escapeHtml(s.dur) + '</div>' + (s.hasPR?'<span class="hist-tag pr">PR</span>':'') + '</div></div>\
+        <button type="button" class="hist-delete-btn" aria-label="Delete workout"><span class="material-symbols-outlined">delete</span></button>';
+      row.querySelector('.hist-delete-btn')?.addEventListener('click', function (e) { deleteHistorySession(s.id, e); });
       grpFrag.appendChild(row);
       const detail=document.createElement('div');
       detail.className='hist-session-detail';
@@ -629,6 +793,7 @@ function initHistory() {
     outerFrag.appendChild(grp);
   });
   container.appendChild(outerFrag); // single insertion
+  updateProfileStats();
 }
 
 function refreshHistory() {
@@ -653,6 +818,11 @@ let chartsVolumeInit=false;
 
 function switchProgTab(tab,el) {
 
+  if (!hasWorkoutHistory()) {
+    showProgressEmpty(true);
+    return;
+  }
+  showProgressEmpty(false);
   document.querySelectorAll('.prog-tab').forEach(t=>{t.classList.remove('active');t.setAttribute('aria-selected','false');});
 if (el){el.classList.add('active');el.setAttribute('aria-selected','true');}
 ['strength','volume','records','activity'].forEach(t=>document.getElementById('prog'+t.charAt(0).toUpperCase()+t.slice(1)).style.display=t===tab?'':'none');
@@ -664,13 +834,38 @@ if (tab==='activity')renderHeatmap();
 
 }
 
+function getExerciseTrend(exerciseName) {
+  var points = [];
+  HIST_DATA.slice().reverse().forEach(function (s) {
+    (s.bests || []).forEach(function (b) {
+      if (b.n === exerciseName && b.w > 0) {
+        var e1 = estimate1RMkg(b.w, b.r);
+        if (e1 > 0) {
+          points.push({ label: String(s.date || '').split(/\s+/).slice(0, 2).join(' '), value: e1 });
+        }
+      }
+    });
+  });
+  if (points.length > 10) points = points.slice(-10);
+  return points;
+}
+
+function getTopExercisesFromHistory(limit) {
+  var counts = new Map();
+  HIST_DATA.forEach(function (s) {
+    (s.bests || []).forEach(function (b) {
+      if (b.w > 0) counts.set(b.n, (counts.get(b.n) || 0) + 1);
+    });
+  });
+  return Array.from(counts.entries()).sort(function (a, b) { return b[1] - a[1]; }).slice(0, limit).map(function (e) { return e[0]; });
+}
+
 function initStrengthCharts() {
 
-  if (typeof Chart==='undefined')return;
+  if (typeof Chart==='undefined' || !hasWorkoutHistory()) return;
 Chart.defaults.color='#5a5b68';
 Chart.defaults.borderColor='rgba(255,255,255,0.07)';
 Chart.defaults.animation=false;
-const aLabels=['17-02','20-02','24-02','27-02','03-03','06-03','10-03','13-03','17-03','20-03'];
 
 function makeGrad(ctx,c1,c2) {
 
@@ -681,17 +876,25 @@ function makeGrad(ctx,c1,c2) {
 
 }
 
-function lineChart(id,labels,data,color) {
+function lineChart(id,labels,data,color,gainEl) {
 
   const ctx=document.getElementById(id);
-  if (!ctx)return;
+  if (!ctx || !data.length) return;
+  if (gainEl && data.length >= 2) {
+    var gain = data[data.length - 1] - data[0];
+    gainEl.textContent = (gain >= 0 ? '+' : '') + Math.round(dispW(gain)) + ' ' + dispU();
+    gainEl.className = 'prog-chart-badge ' + (gain >= 0 ? 'up' : 'down');
+  } else if (gainEl) {
+    gainEl.textContent = '—';
+    gainEl.className = 'prog-chart-badge neutral';
+  }
   new Chart(ctx, {
 
     type:'line',data: {
 
   labels,datasets:[{
 
-      data,borderColor:color,borderWidth:2.5,fill:true,backgroundColor:(c=>makeGrad(c.getContext('2d'),color.replace(')',',0.18)').replace('rgb','rgba'),color.replace(')',',0)').replace('rgb','rgba')))(ctx),tension:.4,pointRadius:3,pointBackgroundColor:color,pointBorderWidth:0
+      data:data.map(dispW),borderColor:color,borderWidth:2.5,fill:true,backgroundColor:(c=>makeGrad(c.getContext('2d'),color.replace(')',',0.18)').replace('rgb','rgba'),color.replace(')',',0)').replace('rgb','rgba')))(ctx),tension:.4,pointRadius:3,pointBackgroundColor:color,pointBorderWidth:0
 
 }]
 
@@ -761,27 +964,62 @@ ctx.closest('.prog-canvas-wrap')?.classList.add('loaded');
 
 }
 
-lineChart('chart-bench',aLabels,[107,109,110,110,113,113,116,116,119,120].map(dispW),'rgb(200,241,53)');
-lineChart('chart-fly',aLabels,[18,18,20,20,22,22,24,24,26,26].map(dispW),'rgb(99,102,241)');
-lineChart('chart-tri',aLabels,[56,57,58,58,59,60,62,63,64,64].map(dispW),'rgb(249,115,22)');
+var chartDefs = [
+  { id: 'chart-bench', gain: 'gain-bench', color: 'rgb(200,241,53)', titleSel: '#progStrength .prog-chart-card:nth-child(1) .prog-chart-title' },
+  { id: 'chart-fly', gain: 'gain-fly', color: 'rgb(99,102,241)', titleSel: '#progStrength .prog-chart-card:nth-child(2) .prog-chart-title' },
+  { id: 'chart-tri', gain: 'gain-tri', color: 'rgb(249,115,22)', titleSel: '#progStrength .prog-chart-card:nth-child(3) .prog-chart-title' }
+];
+getTopExercisesFromHistory(3).forEach(function (exName, i) {
+  var def = chartDefs[i];
+  if (!def) return;
+  var titleEl = document.querySelector(def.titleSel);
+  var card = titleEl && titleEl.closest('.prog-chart-card');
+  if (!exName) {
+    if (card) card.style.display = 'none';
+    return;
+  }
+  if (card) card.style.display = '';
+  if (titleEl) titleEl.textContent = exName;
+  var trend = getExerciseTrend(exName);
+  lineChart(def.id, trend.map(function (p) { return p.label; }), trend.map(function (p) { return p.value; }), def.color, document.getElementById(def.gain));
+});
 
+}
+
+function getWeeklyBuckets() {
+  var buckets = new Map();
+  HIST_DATA.forEach(function (s) {
+    var d = parseSessionDate(s);
+    if (!d) return;
+    var weekStart = new Date(d);
+    weekStart.setDate(d.getDate() - d.getDay());
+    var key = weekStart.toISOString().slice(0, 10);
+    if (!buckets.has(key)) buckets.set(key, { vol: 0, sets: 0 });
+    var b = buckets.get(key);
+    b.vol += typeof s.vol === 'number' ? s.vol : 0;
+    b.sets += Array.isArray(s.sets) ? s.sets.reduce(function (a, n) { return a + n; }, 0) : 0;
+  });
+  return Array.from(buckets.entries()).sort(function (a, b) { return a[0].localeCompare(b[0]); }).slice(-8);
 }
 
 function initVolumeCharts() {
 
-  if (typeof Chart==='undefined')return;
+  if (typeof Chart==='undefined' || !hasWorkoutHistory()) return;
 Chart.defaults.color='#5a5b68';
 Chart.defaults.borderColor='rgba(255,255,255,0.07)';
 Chart.defaults.animation=false;
-const wLabels=['W10','W11','W12','W13','W14','W15','W16','W17'];
+var weekly = getWeeklyBuckets();
+const wLabels = weekly.map(function (w, i) { return 'W' + (i + 1); });
+var volData = weekly.map(function (w) { return Math.round(dispVol_raw(w[1].vol)); });
+var setData = weekly.map(function (w) { return w[1].sets; });
 const ctx2=document.getElementById('chart-vol');
-if (ctx2)new Chart(ctx2, {
+if (ctx2 && volData.length)new Chart(ctx2, {
 
   type:'bar',data: {
 
   labels:wLabels,datasets:[{
 
-      data:[4200,4800,5100,4700,5300,5600,5800,6100].map(v=>Math.round(dispVol_raw(v))),backgroundColor:'rgba(200,241,53,0.25)',borderColor:'rgba(200,241,53,0.7)',borderWidth:1.5,borderRadius:4
+      data:volData,backgroundColor:'rgba(200,241,53,0.25)',borderColor:'rgba(200,241,53,0.7)',borderWidth:1.5,borderRadius:4
 
 }]
 
@@ -848,13 +1086,13 @@ grid: {
 });
 ctx2.closest('.prog-canvas-wrap')?.classList.add('loaded');
 const ctx3=document.getElementById('chart-sets');
-if (ctx3)new Chart(ctx3, {
+if (ctx3 && setData.length)new Chart(ctx3, {
 
   type:'bar',data: {
 
   labels:wLabels,datasets:[{
 
-      data:[21,21,24,21,24,24,27,27],backgroundColor:'rgba(165,180,252,0.25)',borderColor:'rgba(165,180,252,0.7)',borderWidth:1.5,borderRadius:4
+      data:setData,backgroundColor:'rgba(165,180,252,0.25)',borderColor:'rgba(165,180,252,0.7)',borderWidth:1.5,borderRadius:4
 
 }]
 
@@ -924,41 +1162,37 @@ function renderPRs() {
   const c=document.getElementById('prList');
 if (!c)return;
 c.innerHTML='';
-const prs=[{
-
-    name:'Bench Press',emoji:'🏋️',val:Math.round(dispW(120))+' '+dispU(),sub:'Est. 1RM · Epley',date:'Mar 20, 2025',color:'rgba(200,241,53,.1)'
-
-}, {
-
-  name:'Deadlift',emoji:'💀',val:Math.round(dispW(162))+' '+dispU(),sub:'Est. 1RM · Epley',date:'Mar 18, 2025',color:'rgba(165,180,252,.1)'
-
-}, {
-
-  name:'Squat',emoji:'🦵',val:Math.round(dispW(138))+' '+dispU(),sub:'Est. 1RM · Epley',date:'Mar 16, 2025',color:'rgba(251,146,60,.1)'
-
-}, {
-
-  name:'Shoulder Press',emoji:'🎯',val:Math.round(dispW(85))+' '+dispU(),sub:'Est. 1RM · Epley',date:'Mar 14, 2025',color:'rgba(74,222,128,.1)'
-
-}, {
-
-  name:'Romanian Deadlift',emoji:'🔁',val:Math.round(dispW(119))+' '+dispU(),sub:'Est. 1RM · Epley',date:'Mar 16, 2025',color:'rgba(251,191,36,.1)'
-
-}, {
-
-  name:'Tricep Pushdown',emoji:'⚡',val:Math.round(dispW(64))+' '+dispU(),sub:'Top set',date:'Mar 20, 2025',color:'rgba(248,113,113,.1)'
-
-}];
+if (!hasWorkoutHistory()) return;
+var bestMap = new Map();
+var dateMap = new Map();
+var colors = ['rgba(200,241,53,.1)','rgba(165,180,252,.1)','rgba(251,146,60,.1)','rgba(74,222,128,.1)','rgba(251,191,36,.1)','rgba(248,113,113,.1)'];
+HIST_DATA.forEach(function (s) {
+  (s.bests || []).forEach(function (b) {
+    if (!b.w || b.w <= 0) return;
+    var e1 = estimate1RMkg(b.w, b.r);
+    if (!bestMap.has(b.n) || e1 > bestMap.get(b.n)) {
+      bestMap.set(b.n, e1);
+      dateMap.set(b.n, s.date || '');
+    }
+  });
+});
+var prs = Array.from(bestMap.entries()).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 8).map(function (row, i) {
+  return {
+    name: row[0],
+    emoji: '🏋️',
+    val: Math.round(dispW(row[1])) + ' ' + dispU(),
+    sub: 'Est. 1RM · Epley',
+    date: dateMap.get(row[0]) || '',
+    color: colors[i % colors.length],
+    rawKg: row[1]
+  };
+});
 c.innerHTML=prs.map(p=>{
-  // PR values are stored in kg internally (the prs array uses dispW already for display)
-  // We need the raw kg 1RM to feed getStrengthTier
-  const rawKgMap={'Bench Press':120,'Deadlift':162,'Squat':138,'Shoulder Press':85,'Romanian Deadlift':119,'Tricep Pushdown':64};
-  const rawKg=rawKgMap[p.name];
-  const tier=rawKg?getStrengthTier(p.name,rawKg):null;
+  const tier=getStrengthTier(p.name,p.rawKg);
   const tierBadge=tier
     ?`<span class="tier-badge tier-${tier.key}" style="display:inline-flex;margin-top:4px;font-size:9px;padding:2px 5px;">${tier.name} ${tier.stars}</span>`
     :'';
-  return `<div class="pr-row"><div class="pr-icon" style="background:${p.color};">${p.emoji}</div><div class="pr-info"><div class="pr-name">${p.name}</div><div class="pr-date">${p.date}</div></div><div style="text-align:right;"><div class="pr-val">${p.val}</div><div class="pr-sublabel">${p.sub}</div>${tierBadge}</div></div>`;
+  return `<div class="pr-row"><div class="pr-icon" style="background:${p.color};">${p.emoji}</div><div class="pr-info"><div class="pr-name">${escapeHtml(p.name)}</div><div class="pr-date">${escapeHtml(p.date)}</div></div><div style="text-align:right;"><div class="pr-val">${p.val}</div><div class="pr-sublabel">${p.sub}</div>${tierBadge}</div></div>`;
 }).join('');
 
 }
@@ -967,7 +1201,31 @@ function renderHeatmap() {
 
   const c=document.getElementById('activityHeatmap');
 if (!c)return;
-const levels=[0,0,1,0,2,0,1,0,3,0,2,0,1,0,0,2,0,1,0,3,0,2,0,1,0,0,2,0,1,0,3,0,2,0,1,0,0,2,0,1,0,4,0,2,0,1,0,0,2,0,1,0,3,0,2,0,1,0,0,2,0,1,0,3,0,2,0,0,0,0,0,2,0,0,0,0,0,3,0,2,0,1,0,0,2,0,1,0,3,0,2,0];
+if (!hasWorkoutHistory()) {
+  c.innerHTML = '';
+  return;
+}
+var counts = new Map();
+HIST_DATA.forEach(function (s) {
+  var d = parseSessionDate(s);
+  if (!d) return;
+  var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  counts.set(key, (counts.get(key) || 0) + 1);
+});
+var levels = [];
+var today = new Date();
+for (var i = 90; i >= 0; i--) {
+  var day = new Date(today);
+  day.setDate(today.getDate() - i);
+  var key = day.getFullYear() + '-' + String(day.getMonth() + 1).padStart(2, '0') + '-' + String(day.getDate()).padStart(2, '0');
+  var n = counts.get(key) || 0;
+  var level = 0;
+  if (n === 1) level = 1;
+  else if (n === 2) level = 2;
+  else if (n === 3) level = 3;
+  else if (n >= 4) level = 4;
+  levels.push(level);
+}
 c.innerHTML=levels.map(l=>`<div class="hm-cell${l?' l'+l:''}"></div>`).join('');
 
 }
@@ -1028,6 +1286,14 @@ function toggleSetting(id) {
 if (el) {
 
   el.classList.toggle('on');
+  el.setAttribute('aria-checked', el.classList.contains('on') ? 'true' : 'false');
+  if (id === 'cloudsync' && window.WorkoutSync && window.WorkoutSync.setAutoSyncEnabled) {
+    var on = el.classList.contains('on');
+    window.WorkoutSync.setAutoSyncEnabled(on);
+    if (on && window.WorkoutSync.push) window.WorkoutSync.push();
+    showToast(on ? 'Cloud sync on' : 'Cloud sync off');
+    return;
+  }
 showToast(el.classList.contains('on')?'Enabled':'Disabled');
 
 }
@@ -1181,25 +1447,7 @@ markStatsDirty();
 updateHistStatVol();
 updateGainBadges();
 renderPRs();
-if (chartsStrengthInit||chartsVolumeInit) {
-
-  chartsStrengthInit=false;
-  chartsVolumeInit=false;
-  document.querySelectorAll('.prog-canvas-wrap canvas').forEach(function(el) {
-
-  var inst=Chart.getChart(el);
-  if (inst)inst.destroy();
-  el.closest('.prog-canvas-wrap')?.classList.remove('loaded');
-
-});
-if (currentPage==='progress') {
-
-  initStrengthCharts();
-  chartsStrengthInit=true;
-
-}
-
-}
+if (currentPage === 'progress') refreshProgressPage();
 
 refreshHistory();
 renderLibrary();
@@ -1359,6 +1607,16 @@ showToast(filename +' downloaded');
 var IMPORT_MAX_BYTES = 2 * 1024 * 1024;
 var IMPORT_MAX_SESSIONS = 5000;
 
+function finishImport(count) {
+  persistWorkoutHistory();
+  persistExerciseHistories();
+  refreshHistory();
+  refreshProgressPage();
+  closePicker('import');
+  if (window.WorkoutSync && window.WorkoutSync.push) window.WorkoutSync.push();
+  showToast(count + ' session' + (count === 1 ? '' : 's') + ' imported');
+}
+
 function handleImport(input) {
 
   const file = input.files[0];
@@ -1375,8 +1633,6 @@ function handleImport(input) {
 
       if (file.name.endsWith('.csv')) {
         const lines = e.target.result.trim().split('\n');
-        // ── DSA: O(n) batch splice replaces O(n²) repeated unshift calls ──
-        // CSV split: quoted fields, doubled quotes as escape
         function splitCSVLine(line) {
           const fields = []; let cur = '', inQ = false;
           for (let i = 0; i < line.length; i++) {
@@ -1401,26 +1657,44 @@ function handleImport(input) {
         }, []);
         const slice = newItems.slice(0, IMPORT_MAX_SESSIONS);
         HIST_DATA.splice(0, 0, ...slice);
-        persistWorkoutHistory();
-        refreshHistory();
-        closePicker('import');
-        showToast(slice.length + ' sessions imported');
+        finishImport(slice.length);
       } else {
         const data = JSON.parse(e.target.result);
         if (!data || typeof data !== 'object') throw new Error('invalid');
+        if (Array.isArray(data.hist) && data.hist.length) {
+          if (window.WorkoutSync && window.WorkoutSync.applyAppState) {
+            window.WorkoutSync.applyAppState(data);
+          } else {
+            window.HIST_DATA = data.hist.slice(0, IMPORT_MAX_SESSIONS);
+            if (data.exercises && typeof exercises !== 'undefined') {
+              data.exercises.forEach(function (row) {
+                var i = exercises.findIndex(function (ex) { return ex.name === row.name; });
+                if (i !== -1 && row.history) exercises[i].history = row.history.slice();
+              });
+            }
+            if (data.profile) {
+              if (data.profile.profUnit) profUnit = data.profile.profUnit;
+              if (typeof data.profile.profBodyweight === 'number') profBodyweight = data.profile.profBodyweight;
+              if (data.profile.profGender) profGender = data.profile.profGender;
+              if (typeof data.profile.profAge === 'number') profAge = data.profile.profAge;
+              if (data.profile.profName) profName = data.profile.profName;
+              if (data.profile.profHandle) profHandle = data.profile.profHandle;
+              if (typeof data.profile.profRestSecs === 'number') profRestSecs = data.profile.profRestSecs;
+              updateProfileDisplay();
+            }
+          }
+          finishImport(Math.min(data.hist.length, IMPORT_MAX_SESSIONS));
+          return;
+        }
         const sessions = Array.isArray(data.sessions) ? data.sessions : [];
         const capped = sessions.slice(0, IMPORT_MAX_SESSIONS);
-        // ── DSA: O(n) batch splice replaces O(n²) repeated unshift calls ──
         const newItems = capped.map((s, i) => ({
           id: Date.now() + i, name: (s && s.workout) ? String(s.workout) : 'Workout', emoji:'📋',
           date: (s && s.date) ? String(s.date) : '', day:'', exercises:[], sets:[], bests:[],
           vol: parseFloat(s && s.volume_kg) || 0, dur: (s && s.duration) ? String(s.duration) : '', hasPR: false
         }));
         HIST_DATA.splice(0, 0, ...newItems);
-        persistWorkoutHistory();
-        refreshHistory();
-        closePicker('import');
-        showToast(newItems.length + ' sessions imported');
+        finishImport(newItems.length);
       }
 
 }
@@ -1560,19 +1834,9 @@ if (cfg.libMode)nt.classList.add('lib-mode');
 else nt.classList.remove('lib-mode');
 document.getElementById('startStopBtn').style.display=cfg.libMode?'none':'';
 document.getElementById('dotsBtn').style.display=cfg.libMode?'none':'';
-closeDotsMenu();if (page==='progress'&&!chartsStrengthInit) {
+closeDotsMenu();if (page==='progress') {
 
-  setTimeout(()=> {
-
-    if (!chartsStrengthInit) {
-
-      initStrengthCharts();
-      chartsStrengthInit=true;
-
-    }
-
-  },
-  100);
+  setTimeout(function () { refreshProgressPage(); }, 100);
 
 }
 
@@ -3553,49 +3817,22 @@ if (btn) btn.setAttribute('aria-expanded', hr.classList.contains('visible') ? 't
 }
 
 function updateGainBadges() {
-
-  var gains= {
-
-    bench: {
-
-      kg:7.5
-
-    },
-    fly: {
-
-      kg:4
-
-    },
-    tri: {
-
-      kg:6.5
-
-    }
-
-  };
-
-  Object.entries(gains).forEach(function(entry) {
-
-    var key=entry[0],val=entry[1];
-    var el=document.getElementById('gain-'+key);
-if (el) {
-
-  var disp=profUnit==='lbs'?Math.round(val.kg*KG_TO_LBS):val.kg;
-el.textContent='+'+disp+' '+dispU();
-
-}
-
-});
-
+  if (!hasWorkoutHistory()) return;
+  var keys = ['bench', 'fly', 'tri'];
+  var topEx = getTopExercisesFromHistory(3);
+  keys.forEach(function (key, i) {
+    var el = document.getElementById('gain-' + key);
+    if (!el || !topEx[i]) return;
+    var trend = getExerciseTrend(topEx[i]);
+    if (trend.length < 2) return;
+    var gain = trend[trend.length - 1].value - trend[0].value;
+    el.textContent = (gain >= 0 ? '+' : '') + Math.round(dispW(gain)) + ' ' + dispU();
+    el.className = 'prog-chart-badge ' + (gain >= 0 ? 'up' : 'down');
+  });
 }
 
 function updateHistStatVol() {
-
-  var el=document.getElementById('histStatVol');
-if (!el)return;
-var rawVol=8400;
-el.textContent=profUnit==='lbs'?Math.round(rawVol*KG_TO_LBS).toLocaleString()+' lbs':(rawVol/1000).toFixed(1)+'t';
-
+  updateProfileStats();
 }
 
 // ── DSA: Stale-flag incremental stats — only recomputes when dirty ──
@@ -3792,6 +4029,7 @@ function finishWorkout() {
     persistWorkoutHistory();
     persistExerciseHistories();
     refreshHistory();
+    refreshProgressPage();
   }
   _best1RMCache.clear();
   workoutActive = false;
@@ -4011,6 +4249,7 @@ initLibrary();
 initHistory();
 updateProfileDisplay();
 updateProfileStats();
+if (typeof showProgressEmpty === 'function') showProgressEmpty(!hasWorkoutHistory());
 window.addEventListener('hashchange',function(){
   var p=getSavedPage()||'log';
   if (p!==currentPage)switchPage(p);

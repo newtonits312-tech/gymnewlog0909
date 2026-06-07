@@ -10,7 +10,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <title>Workout</title>
-<link rel="stylesheet" href="css/workout.css?v=20250608a"/>
+<link rel="stylesheet" href="css/workout.css?v=20250608b"/>
 <script src="js/workout-core.js"></script>
 <script src="js/workout-library.js"></script>
 <script src="js/workout-strength-data.js"></script>
@@ -211,9 +211,9 @@
     <div class="lib-subtitle">Your training log</div>
   </div>
   <div class="hist-pg-stats">
-    <div class="hist-pg-card"><div class="hist-pg-val">47</div><div class="hist-pg-lbl">Workouts</div></div>
-    <div class="hist-pg-card"><div class="hist-pg-val">138</div><div class="hist-pg-lbl">Hours</div></div>
-    <div class="hist-pg-card"><div class="hist-pg-val" id="histStatVol">8.4t</div><div class="hist-pg-lbl">Volume</div></div>
+    <div class="hist-pg-card"><div class="hist-pg-val" id="histStatCount">0</div><div class="hist-pg-lbl">Workouts</div></div>
+    <div class="hist-pg-card"><div class="hist-pg-val" id="histStatHours">0</div><div class="hist-pg-lbl">Hours</div></div>
+    <div class="hist-pg-card"><div class="hist-pg-val" id="histStatVol">0</div><div class="hist-pg-lbl">Volume</div></div>
   </div>
   <div id="histList"></div>
   <div style="height:16px;"></div>
@@ -224,6 +224,11 @@
   <div class="lib-hero">
     <div class="lib-large-title">Progress</div>
     <div class="lib-subtitle">Strength & volume over time</div>
+  </div>
+  <div class="prog-empty-state" id="progNoData" hidden>
+    <span class="material-symbols-outlined prog-empty-icon" aria-hidden="true">bar_chart</span>
+    <div class="prog-empty-title">No progress yet</div>
+    <div class="prog-empty-sub">Complete or import workouts to unlock charts and records.</div>
   </div>
   <div class="prog-tabs" id="progTabs" role="tablist">
     <div class="prog-tab active" role="tab" tabindex="0" aria-selected="true">Strength</div>
@@ -285,9 +290,9 @@
   <div id="progActivity" style="display:none;">
     <div class="prog-section">
       <div class="prog-streak-row">
-        <div class="prog-streak-card"><div class="prog-streak-val" style="color:var(--accent);">7</div><div class="prog-streak-label">Current Streak</div></div>
-        <div class="prog-streak-card"><div class="prog-streak-val" style="color:var(--warn);">14</div><div class="prog-streak-label">Best Streak</div></div>
-        <div class="prog-streak-card"><div class="prog-streak-val" style="color:var(--done);">47</div><div class="prog-streak-label">Total Sessions</div></div>
+        <div class="prog-streak-card"><div class="prog-streak-val" id="progStreakCurrent" style="color:var(--accent);">0</div><div class="prog-streak-label">Current Streak</div></div>
+        <div class="prog-streak-card"><div class="prog-streak-val" id="progStreakBest" style="color:var(--warn);">0</div><div class="prog-streak-label">Best Streak</div></div>
+        <div class="prog-streak-card"><div class="prog-streak-val" id="progStreakTotal" style="color:var(--done);">0</div><div class="prog-streak-label">Total Sessions</div></div>
       </div>
       <div class="prog-heatmap-wrap">
         <div class="prog-section-title" style="margin-bottom:4px;">Last 13 Weeks</div>
@@ -319,9 +324,9 @@
     </div>
   </div>
   <div class="prof-stats-row">
-    <div class="prof-stat"><div class="prof-stat-val">47</div><div class="prof-stat-lbl">Workouts</div></div>
-    <div class="prof-stat"><div class="prof-stat-val">138h</div><div class="prof-stat-lbl">Training</div></div>
-    <div class="prof-stat"><div class="prof-stat-val">8.4t</div><div class="prof-stat-lbl">Volume</div></div>
+    <div class="prof-stat"><div class="prof-stat-val" id="profStatWorkouts">0</div><div class="prof-stat-lbl">Workouts</div></div>
+    <div class="prof-stat"><div class="prof-stat-val" id="profStatHours">0h</div><div class="prof-stat-lbl">Training</div></div>
+    <div class="prof-stat"><div class="prof-stat-val" id="profStatVolume">0</div><div class="prof-stat-lbl">Volume</div></div>
   </div>
   <div class="settings-section">
     <div class="settings-section-label">Preferences</div>
@@ -426,10 +431,10 @@
           </div>
         </div>
       </div>
-      <div class="settings-row" id="row-cloud-sync" role="button" tabindex="0" aria-label="Cloud sync status">
+      <div class="settings-row" id="row-cloud-sync">
         <div class="settings-row-icon" style="background:rgba(34,197,94,.1);"><span class="material-symbols-outlined" style="color:var(--done);">cloud_sync</span></div>
         <div class="settings-row-info"><div class="settings-row-label">Cloud Sync</div><div class="settings-row-sub" id="cloudSyncSub">Checking…</div></div>
-        <div class="settings-row-right"><span class="settings-row-value" id="cloudSyncBadge" style="font-size:11px;">—</span></div>
+        <div class="settings-row-right"><div class="toggle-sw on" id="toggle-cloudsync" role="switch" aria-checked="true" aria-label="Cloud sync"><div class="toggle-knob"></div></div></div>
       </div>
     </div>
   </div>

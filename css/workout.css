@@ -477,7 +477,7 @@ input[type=number]{-moz-appearance:textfield;}
 .hist-month-title{font-size:13px;font-weight:500;color:var(--text3);letter-spacing:-.1px;}
 .hist-month-count{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
 .hist-session-group{margin:0 16px;background:var(--surface2);border-radius:16px;overflow:hidden;border:1px solid var(--border);}
-.hist-session{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--transition);}
+.hist-session{display:flex;align-items:center;gap:10px;padding:14px 12px 14px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--transition);}
 .hist-session:hover{background:var(--surface3);}
 .hist-session:last-child{border-bottom:none;}
 .hist-session:active{background:var(--surface2);}
@@ -486,6 +486,17 @@ input[type=number]{-moz-appearance:textfield;}
 .hist-session-name{font-size:15px;font-weight:500;letter-spacing:-.2px;}
 .hist-session-meta{font-size:12px;color:var(--text3);margin-top:2px;}
 .hist-session-right{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:3px;flex-shrink:0;}
+.hist-delete-btn{width:32px;height:32px;border:none;border-radius:8px;background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s;}
+.hist-delete-btn:hover{background:rgba(248,113,113,.12);color:var(--danger);}
+.hist-delete-btn .material-symbols-outlined{font-size:18px!important;}
+.hist-empty{margin:24px 16px;padding:32px 20px;text-align:center;border-radius:16px;background:var(--surface2);border:1px dashed var(--border2);}
+.hist-empty-icon{font-size:36px!important;color:var(--text3);margin-bottom:10px;}
+.hist-empty-title{font-size:15px;font-weight:500;margin-bottom:4px;}
+.hist-empty-sub{font-size:12px;color:var(--text3);line-height:1.45;}
+.prog-empty-state{margin:8px 16px 0;padding:36px 20px;text-align:center;border-radius:16px;background:var(--surface2);border:1px dashed var(--border2);}
+.prog-empty-icon{font-size:40px!important;color:var(--text3);margin-bottom:10px;}
+.prog-empty-title{font-size:15px;font-weight:500;margin-bottom:4px;}
+.prog-empty-sub{font-size:12px;color:var(--text3);line-height:1.45;max-width:260px;margin:0 auto;}
 .hist-session-vol{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--text);}
 .hist-session-dur{font-size:11px;color:var(--text3);}
 .hist-session-meta-row{display:flex;align-items:center;gap:5px;}
@@ -514,6 +525,7 @@ input[type=number]{-moz-appearance:textfield;}
 .prog-chart-badge{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;padding:3px 9px;border-radius:99px;}
 .prog-chart-badge.up{background:rgba(34,197,94,.12);color:var(--done);border:1px solid rgba(34,197,94,.2);}
 .prog-chart-badge.neutral{background:var(--surface3);color:var(--text3);border:1px solid var(--border);}
+.prog-chart-badge.down{background:rgba(248,113,113,.12);color:var(--danger);border:1px solid rgba(248,113,113,.2);}
 .prog-canvas-wrap{position:relative;height:140px;}
 .prog-canvas-wrap::before{content:'';position:absolute;inset:0;border-radius:8px;background:linear-gradient(90deg,var(--surface3) 25%,var(--surface4) 50%,var(--surface3) 75%);background-size:200% 100%;animation:shimmer 1.6s ease-in-out infinite;z-index:1;}
 .prog-canvas-wrap.loaded::before{display:none;}
